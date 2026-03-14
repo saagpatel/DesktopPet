@@ -1,3 +1,5 @@
+import { readLocalStorage, writeLocalStorage } from "./safeStorage";
+
 export interface ChillSignals {
   fullscreen: boolean;
   meeting: boolean;
@@ -9,14 +11,13 @@ export interface ChillSignals {
 const CHANNEL_NAME = "desktop-pet-chill-signals";
 
 function supportsBroadcastChannel() {
-  return typeof window !== "undefined" && typeof BroadcastChannel !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof BroadcastChannel !== "undefined"
+  );
 }
 
 function readFallback(): ChillSignals | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  const raw = window.localStorage.getItem(CHANNEL_NAME);
+  const raw = readLocalStorage(CHANNEL_NAME);
   if (!raw) {
     return null;
   }
@@ -34,15 +35,16 @@ export function publishChillSignals(signals: ChillSignals) {
     channel.close();
     return;
   }
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(CHANNEL_NAME, JSON.stringify(signals));
-  }
+  writeLocalStorage(CHANNEL_NAME, JSON.stringify(signals));
 }
 
-export function listenForChillSignals(handler: (signals: ChillSignals) => void): () => void {
+export function listenForChillSignals(
+  handler: (signals: ChillSignals) => void,
+): () => void {
   if (supportsBroadcastChannel()) {
     const channel = new BroadcastChannel(CHANNEL_NAME);
-    channel.onmessage = (event: MessageEvent<ChillSignals>) => handler(event.data);
+    channel.onmessage = (event: MessageEvent<ChillSignals>) =>
+      handler(event.data);
     return () => channel.close();
   }
 

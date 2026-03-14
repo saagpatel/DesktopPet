@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { copyTextWithFallback } from "../../lib/clipboard";
 import { TIMER_PRESETS } from "../../lib/constants";
+import { readLocalStorage } from "../../lib/safeStorage";
 import type { TimerPreset } from "../../lib/constants";
 import type {
   AppDiagnostics,
@@ -38,6 +39,7 @@ export interface SettingsPanelProps {
   onImportData: (rawJson: string) => Promise<string>;
   onResetData: () => Promise<string>;
   onGetDiagnostics: () => Promise<AppDiagnostics | null>;
+  onRecoverPetWindow: () => Promise<string>;
   guardrailStatus: FocusGuardrailsStatus | null;
   guardrailEvents: FocusGuardrailEvent[];
   disabled: boolean;
@@ -74,15 +76,24 @@ export function SettingsPanel({
   onImportData,
   onResetData,
   onGetDiagnostics,
+  onRecoverPetWindow,
   guardrailStatus,
   guardrailEvents,
   disabled,
 }: SettingsPanelProps) {
-  const presets = Object.entries(TIMER_PRESETS) as [TimerPreset, (typeof TIMER_PRESETS)[TimerPreset]][];
-  const [hostPreview, setHostPreview] = useState(settings.focusBlocklist.join(", "));
+  const presets = Object.entries(TIMER_PRESETS) as [
+    TimerPreset,
+    (typeof TIMER_PRESETS)[TimerPreset],
+  ][];
+  const [hostPreview, setHostPreview] = useState(
+    settings.focusBlocklist.join(", "),
+  );
   const [opsMessage, setOpsMessage] = useState<string | null>(null);
   const [opsBusy, setOpsBusy] = useState(false);
-  const [trayFallbackCount, setTrayFallbackCount] = useState<number | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [trayFallbackCount, setTrayFallbackCount] = useState<number | null>(
+    null,
+  );
   const importFileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -90,7 +101,7 @@ export function SettingsPanel({
   }, [settings.focusBlocklist]);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem("desktop-pet-tray-fallback-count");
+    const raw = readLocalStorage("desktop-pet-tray-fallback-count");
     if (!raw) {
       setTrayFallbackCount(null);
       return;
@@ -103,6 +114,7 @@ export function SettingsPanel({
     setOpsBusy(true);
     try {
       const message = await operation();
+      setConfirmingReset(false);
       setOpsMessage(message);
     } catch {
       setOpsMessage("Operation failed. Please try again.");
@@ -113,7 +125,12 @@ export function SettingsPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>Timer Mode</h3>
+      <h3
+        className="text-sm font-medium"
+        style={{ color: "var(--muted-color)" }}
+      >
+        Timer Mode
+      </h3>
       <div className="flex flex-col gap-2">
         {presets.map(([key, val]) => (
           <button
@@ -123,9 +140,7 @@ export function SettingsPanel({
             className={`p-3 rounded-lg border text-left transition-opacity ${disabled ? "opacity-60" : ""}`}
             style={{
               backgroundColor:
-                preset === key
-                  ? "var(--accent-soft)"
-                  : "var(--card-bg)",
+                preset === key ? "var(--accent-soft)" : "var(--card-bg)",
               borderColor:
                 preset === key
                   ? "color-mix(in srgb, var(--accent-color) 35%, white)"
@@ -146,12 +161,20 @@ export function SettingsPanel({
         </p>
       )}
 
-      <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: "var(--border-color)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+      <div
+        className="pt-2 border-t flex flex-col gap-3"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Calm Controls
         </h3>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Quiet mode (default)</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Quiet mode (default)
+          </span>
           <input
             type="checkbox"
             checked={settings.quietModeEnabled}
@@ -166,12 +189,17 @@ export function SettingsPanel({
             onChange={(event) => onSetFocusModeEnabled(event.target.checked)}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Animation budget
           <select
             value={settings.animationBudget}
             onChange={(event) =>
-              onSetAnimationBudget(event.target.value as "low" | "medium" | "high")
+              onSetAnimationBudget(
+                event.target.value as "low" | "medium" | "high",
+              )
             }
             className="px-2 py-1 border rounded-md text-sm"
             style={{
@@ -187,24 +215,38 @@ export function SettingsPanel({
         </label>
       </div>
 
-      <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: "var(--border-color)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+      <div
+        className="pt-2 border-t flex flex-col gap-3"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Notifications
         </h3>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Desktop notifications</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Desktop notifications
+          </span>
           <input
             type="checkbox"
             checked={settings.notificationsEnabled}
-            onChange={(event) => onSetNotificationsEnabled(event.target.checked)}
+            onChange={(event) =>
+              onSetNotificationsEnabled(event.target.checked)
+            }
           />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Toast popups (opt-in)</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Toast popups (opt-in)
+          </span>
           <input
             type="checkbox"
             checked={settings.toastNotificationsEnabled}
-            onChange={(event) => onSetToastNotificationsEnabled(event.target.checked)}
+            onChange={(event) =>
+              onSetToastNotificationsEnabled(event.target.checked)
+            }
             disabled={!settings.notificationsEnabled}
           />
         </label>
@@ -216,7 +258,10 @@ export function SettingsPanel({
             onChange={(event) => onSetTrayBadgeEnabled(event.target.checked)}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Toast whitelist (comma-separated event ids)
           <input
             className="px-2 py-1 border rounded-md text-sm"
@@ -231,7 +276,7 @@ export function SettingsPanel({
                 event.target.value
                   .split(",")
                   .map((item) => item.trim().toLowerCase())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
           />
@@ -247,7 +292,11 @@ export function SettingsPanel({
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span
-            className={!settings.soundsEnabled || settings.quietModeEnabled ? "opacity-50" : ""}
+            className={
+              !settings.soundsEnabled || settings.quietModeEnabled
+                ? "opacity-50"
+                : ""
+            }
             style={{ color: "var(--text-color)" }}
           >
             Sound volume ({Math.round(settings.soundVolume * 100)}%)
@@ -264,8 +313,14 @@ export function SettingsPanel({
         </label>
       </div>
 
-      <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: "var(--border-color)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+      <div
+        className="pt-2 border-t flex flex-col gap-3"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Context-aware Chill
         </h3>
         <label className="flex items-center justify-between gap-3 text-sm">
@@ -273,11 +328,15 @@ export function SettingsPanel({
           <input
             type="checkbox"
             checked={settings.contextAwareChillEnabled}
-            onChange={(event) => onSetContextAwareChillEnabled(event.target.checked)}
+            onChange={(event) =>
+              onSetContextAwareChillEnabled(event.target.checked)
+            }
           />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Chill during fullscreen</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Chill during fullscreen
+          </span>
           <input
             type="checkbox"
             checked={settings.chillOnFullscreen}
@@ -286,7 +345,9 @@ export function SettingsPanel({
           />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Chill during meetings</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Chill during meetings
+          </span>
           <input
             type="checkbox"
             checked={settings.chillOnMeetings}
@@ -295,7 +356,9 @@ export function SettingsPanel({
           />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Chill during heavy typing</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Chill during heavy typing
+          </span>
           <input
             type="checkbox"
             checked={settings.chillOnHeavyTyping}
@@ -303,7 +366,10 @@ export function SettingsPanel({
             disabled={!settings.contextAwareChillEnabled}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Meeting hosts (comma-separated)
           <input
             className="px-2 py-1 border rounded-md text-sm"
@@ -318,13 +384,18 @@ export function SettingsPanel({
                 event.target.value
                   .split(",")
                   .map((item) => item.trim().toLowerCase())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
-            disabled={!settings.contextAwareChillEnabled || !settings.chillOnMeetings}
+            disabled={
+              !settings.contextAwareChillEnabled || !settings.chillOnMeetings
+            }
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Heavy typing threshold ({settings.heavyTypingThresholdCpm} chars/min)
           <input
             type="range"
@@ -332,72 +403,111 @@ export function SettingsPanel({
             max={420}
             step={10}
             value={settings.heavyTypingThresholdCpm}
-            onChange={(event) => onSetHeavyTypingThresholdCpm(Number(event.target.value))}
-            disabled={!settings.contextAwareChillEnabled || !settings.chillOnHeavyTyping}
+            onChange={(event) =>
+              onSetHeavyTypingThresholdCpm(Number(event.target.value))
+            }
+            disabled={
+              !settings.contextAwareChillEnabled || !settings.chillOnHeavyTyping
+            }
           />
         </label>
       </div>
 
-      <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: "var(--border-color)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>Focus Guardrails</h3>
+      <div
+        className="pt-2 border-t flex flex-col gap-3"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
+          Focus Guardrails
+        </h3>
         <label className="flex items-center justify-between gap-3 text-sm">
           <span style={{ color: "var(--text-color)" }}>Enable guardrails</span>
           <input
             type="checkbox"
             checked={settings.focusGuardrailsEnabled}
-            onChange={(event) => onSetFocusGuardrailsEnabled(event.target.checked)}
+            onChange={(event) =>
+              onSetFocusGuardrailsEnabled(event.target.checked)
+            }
           />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span style={{ color: "var(--text-color)" }}>Only during work sessions</span>
+          <span style={{ color: "var(--text-color)" }}>
+            Only during work sessions
+          </span>
           <input
             type="checkbox"
             checked={settings.focusGuardrailsWorkOnly}
-            onChange={(event) => onSetFocusGuardrailsWorkOnly(event.target.checked)}
+            onChange={(event) =>
+              onSetFocusGuardrailsWorkOnly(event.target.checked)
+            }
             disabled={!settings.focusGuardrailsEnabled}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Allowed hosts (comma-separated)
           <textarea
             rows={2}
             className="px-2 py-1 border rounded-md text-sm"
-            style={{ borderColor: "var(--border-color)", backgroundColor: "var(--card-bg)", color: "var(--text-color)" }}
+            style={{
+              borderColor: "var(--border-color)",
+              backgroundColor: "var(--card-bg)",
+              color: "var(--text-color)",
+            }}
             value={settings.focusAllowlist.join(", ")}
             onChange={(event) =>
               onSetFocusAllowlist(
                 event.target.value
                   .split(",")
                   .map((item) => item.trim())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
             disabled={!settings.focusGuardrailsEnabled}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Blocked hosts (comma-separated)
           <textarea
             rows={2}
             className="px-2 py-1 border rounded-md text-sm"
-            style={{ borderColor: "var(--border-color)", backgroundColor: "var(--card-bg)", color: "var(--text-color)" }}
+            style={{
+              borderColor: "var(--border-color)",
+              backgroundColor: "var(--card-bg)",
+              color: "var(--text-color)",
+            }}
             value={settings.focusBlocklist.join(", ")}
             onChange={(event) =>
               onSetFocusBlocklist(
                 event.target.value
                   .split(",")
                   .map((item) => item.trim())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
             disabled={!settings.focusGuardrailsEnabled}
           />
         </label>
-        <label className="text-xs flex flex-col gap-1" style={{ color: "var(--muted-color)" }}>
+        <label
+          className="text-xs flex flex-col gap-1"
+          style={{ color: "var(--muted-color)" }}
+        >
           Host check preview (comma-separated)
           <input
             className="px-2 py-1 border rounded-md text-sm"
-            style={{ borderColor: "var(--border-color)", backgroundColor: "var(--card-bg)", color: "var(--text-color)" }}
+            style={{
+              borderColor: "var(--border-color)",
+              backgroundColor: "var(--card-bg)",
+              color: "var(--text-color)",
+            }}
             value={hostPreview}
             onChange={(event) => setHostPreview(event.target.value)}
             disabled={!settings.focusGuardrailsEnabled}
@@ -414,7 +524,7 @@ export function SettingsPanel({
                 hostPreview
                   .split(",")
                   .map((item) => item.trim())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
           >
@@ -422,7 +532,10 @@ export function SettingsPanel({
           </button>
           <button
             className="px-2 py-1 rounded-md text-xs text-white disabled:opacity-40"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 60%, #f59e0b)" }}
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-color) 60%, #f59e0b)",
+            }}
             disabled={!settings.focusGuardrailsEnabled}
             onClick={() =>
               onInterveneGuardrails(
@@ -430,7 +543,7 @@ export function SettingsPanel({
                 hostPreview
                   .split(",")
                   .map((item) => item.trim())
-                  .filter(Boolean)
+                  .filter(Boolean),
               )
             }
           >
@@ -442,19 +555,24 @@ export function SettingsPanel({
             className="text-xs border rounded-md px-2 py-1"
             style={{
               color: "var(--text-color)",
-              backgroundColor: "color-mix(in srgb, var(--accent-soft) 20%, var(--card-bg))",
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-soft) 20%, var(--card-bg))",
               borderColor: "var(--border-color)",
             }}
           >
             <div>{guardrailStatus.message}</div>
             <div>
-              level: {guardrailStatus.nudgeLevel} • action: {guardrailStatus.recommendedAction}
+              level: {guardrailStatus.nudgeLevel} • action:{" "}
+              {guardrailStatus.recommendedAction}
             </div>
           </div>
         )}
         {guardrailEvents.length > 0 && (
           <div className="flex flex-col gap-1">
-            <div className="text-xs font-medium" style={{ color: "var(--muted-color)" }}>
+            <div
+              className="text-xs font-medium"
+              style={{ color: "var(--muted-color)" }}
+            >
               Recent interventions
             </div>
             {guardrailEvents.slice(0, 5).map((event) => (
@@ -468,7 +586,8 @@ export function SettingsPanel({
                 }}
               >
                 <div className="capitalize">
-                  {event.phase} • {event.nudgeLevel} • {event.recommendedAction.replace("_", " ")}
+                  {event.phase} • {event.nudgeLevel} •{" "}
+                  {event.recommendedAction.replace("_", " ")}
                 </div>
                 <div style={{ color: "var(--muted-color)" }}>
                   {new Date(event.createdAt).toLocaleTimeString()} •{" "}
@@ -480,8 +599,14 @@ export function SettingsPanel({
         )}
       </div>
 
-      <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: "var(--border-color)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+      <div
+        className="pt-2 border-t flex flex-col gap-3"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Data & Diagnostics
         </h3>
         <div className="flex gap-2 flex-wrap">
@@ -495,7 +620,10 @@ export function SettingsPanel({
           </button>
           <button
             className="px-2 py-1 rounded-md text-xs text-white disabled:opacity-40"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 75%, #0ea5e9)" }}
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-color) 75%, #0ea5e9)",
+            }}
             disabled={opsBusy}
             onClick={() => importFileRef.current?.click()}
           >
@@ -506,17 +634,17 @@ export function SettingsPanel({
             style={{ backgroundColor: "#b91c1c" }}
             disabled={opsBusy}
             onClick={() => {
-              if (!window.confirm("Reset all local app data? This cannot be undone.")) {
-                return;
-              }
-              void runDataOperation(onResetData);
+              setConfirmingReset((current) => !current);
             }}
           >
-            Reset App Data
+            {confirmingReset ? "Cancel Reset" : "Reset App Data"}
           </button>
           <button
             className="px-2 py-1 rounded-md text-xs text-white disabled:opacity-40"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 65%, #4b5563)" }}
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-color) 65%, #4b5563)",
+            }}
             disabled={opsBusy}
             onClick={() =>
               void runDataOperation(async () => {
@@ -526,14 +654,59 @@ export function SettingsPanel({
                 }
                 return copyTextWithFallback(
                   JSON.stringify(diagnostics, null, 2),
-                  "Diagnostics"
+                  "Diagnostics",
                 );
               })
             }
           >
             Copy Diagnostics
           </button>
+          <button
+            className="px-2 py-1 rounded-md text-xs text-white disabled:opacity-40"
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-color) 80%, #059669)",
+            }}
+            disabled={opsBusy}
+            onClick={() => void runDataOperation(onRecoverPetWindow)}
+          >
+            Bring Pet On Screen
+          </button>
         </div>
+        {confirmingReset && (
+          <div
+            className="text-xs border rounded-md px-2 py-2 flex flex-col gap-2"
+            style={{
+              color: "var(--text-color)",
+              borderColor: "#b91c1c",
+              backgroundColor: "color-mix(in srgb, #b91c1c 8%, var(--card-bg))",
+            }}
+          >
+            <div>Reset all local app data? This cannot be undone.</div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                className="px-2 py-1 rounded-md text-xs text-white disabled:opacity-40"
+                style={{ backgroundColor: "#b91c1c" }}
+                disabled={opsBusy}
+                onClick={() => void runDataOperation(onResetData)}
+              >
+                Confirm Reset
+              </button>
+              <button
+                className="px-2 py-1 rounded-md text-xs"
+                style={{
+                  color: "var(--text-color)",
+                  backgroundColor: "var(--card-bg)",
+                  border: "1px solid var(--border-color)",
+                }}
+                disabled={opsBusy}
+                onClick={() => setConfirmingReset(false)}
+              >
+                Keep My Data
+              </button>
+            </div>
+          </div>
+        )}
         <input
           ref={importFileRef}
           type="file"
@@ -574,7 +747,8 @@ export function SettingsPanel({
               backgroundColor: "var(--card-bg)",
             }}
           >
-            Tray title badges are unavailable on this platform. Fallback count: {trayFallbackCount}
+            Tray title badges are unavailable on this platform. Fallback count:{" "}
+            {trayFallbackCount}
           </div>
         )}
       </div>

@@ -16,7 +16,25 @@ vi.mock("@tauri-apps/api/event", () => ({
 }));
 
 vi.mock("@tauri-apps/api/window", () => ({
+  Window: {
+    getByLabel: vi.fn(() => Promise.resolve(null)),
+  },
+  availableMonitors: vi.fn(() => Promise.resolve([])),
+  PhysicalPosition: class PhysicalPosition {
+    x: number;
+    y: number;
+
+    constructor(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+    }
+  },
   getCurrentWindow: vi.fn(() => ({
+    onMoved: vi.fn(() => Promise.resolve(() => {})),
+    outerPosition: vi.fn(() => Promise.resolve({ x: 0, y: 0 })),
+    outerSize: vi.fn(() => Promise.resolve({ width: 380, height: 380 })),
+    setPosition: vi.fn(() => Promise.resolve()),
+    show: vi.fn(() => Promise.resolve()),
     startDragging: vi.fn(),
   })),
 }));

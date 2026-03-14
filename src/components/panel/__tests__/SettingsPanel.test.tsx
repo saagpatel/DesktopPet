@@ -33,7 +33,9 @@ const baseSettings: Settings = {
   focusBlocklist: [],
 };
 
-function createProps(overrides: Partial<SettingsPanelProps> = {}): SettingsPanelProps {
+function createProps(
+  overrides: Partial<SettingsPanelProps> = {},
+): SettingsPanelProps {
   return {
     preset: "standard",
     settings: baseSettings,
@@ -63,6 +65,7 @@ function createProps(overrides: Partial<SettingsPanelProps> = {}): SettingsPanel
     onImportData: vi.fn(async () => "Import complete"),
     onResetData: vi.fn(async () => "Reset complete"),
     onGetDiagnostics: vi.fn(async () => null),
+    onRecoverPetWindow: vi.fn(async () => "Pet moved back on screen"),
     guardrailStatus: null,
     guardrailEvents: [],
     disabled: false,
@@ -88,37 +91,44 @@ describe("SettingsPanel data operations", () => {
 
   it("runs reset when confirmed", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const props = createProps();
     render(<SettingsPanel {...props} />);
 
     await user.click(screen.getByRole("button", { name: "Reset App Data" }));
+    await user.click(screen.getByRole("button", { name: "Confirm Reset" }));
 
-    expect(confirmSpy).toHaveBeenCalled();
     expect(props.onResetData).toHaveBeenCalledTimes(1);
     await screen.findByText("Reset complete");
   });
 
-  it("does not run reset when confirmation is rejected", async () => {
+  it("does not run reset when the inline confirmation is cancelled", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const props = createProps();
     render(<SettingsPanel {...props} />);
 
     await user.click(screen.getByRole("button", { name: "Reset App Data" }));
+    await user.click(screen.getByRole("button", { name: "Keep My Data" }));
 
-    expect(confirmSpy).toHaveBeenCalled();
     expect(props.onResetData).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Confirm Reset" }),
+    ).not.toBeInTheDocument();
   });
 
   it("rejects oversize backup import before invoking import command", async () => {
     const props = createProps();
     render(<SettingsPanel {...props} />);
 
-    const fileInput = document.querySelector("input[type='file']") as HTMLInputElement;
-    const oversizedFile = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.json", {
-      type: "application/json",
-    });
+    const fileInput = document.querySelector(
+      "input[type='file']",
+    ) as HTMLInputElement;
+    const oversizedFile = new File(
+      [new Uint8Array(5 * 1024 * 1024 + 1)],
+      "big.json",
+      {
+        type: "application/json",
+      },
+    );
 
     fireEvent.change(fileInput, { target: { files: [oversizedFile] } });
 
@@ -131,8 +141,10 @@ describe("SettingsPanel data operations", () => {
     const props = createProps();
     render(<SettingsPanel {...props} />);
 
-    const fileInput = document.querySelector("input[type='file']") as HTMLInputElement;
-    const validJson = "{\"schemaVersion\":4}";
+    const fileInput = document.querySelector(
+      "input[type='file']",
+    ) as HTMLInputElement;
+    const validJson = '{"schemaVersion":4}';
     const backupFile = new File([validJson], "backup.json", {
       type: "application/json",
     });
@@ -177,6 +189,55 @@ describe("SettingsPanel data operations", () => {
     render(<SettingsPanel {...props} />);
     await user.click(screen.getByRole("button", { name: "Copy Diagnostics" }));
 
-    await screen.findByText((text) => text.includes("Clipboard unavailable. Diagnostics:"));
+    await screen.findByText((text) =>
+      text.includes("Clipboard unavailable. Diagnostics:"),
+    );
+  });
+
+  it("copies diagnostics via legacy document fallback when clipboard write is blocked", async () => {
+    const user = userEvent.setup();
+    const diagnostics: AppDiagnostics = {
+      appVersion: "1.0.0",
+      schemaVersion: 4,
+      currentSchemaVersion: 4,
+      exportedAt: "2026-03-14T00:00:00Z",
+      os: "macos",
+      arch: "aarch64",
+      tasksCount: 0,
+      sessionsCount: 0,
+      summariesCount: 0,
+      guardrailEventsCount: 0,
+      hasActiveQuest: false,
+    };
+
+    const writeText = vi.fn().mockRejectedValue(new Error("blocked"));
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const props = createProps({
+      onGetDiagnostics: vi.fn(async () => diagnostics),
+    });
+
+    render(<SettingsPanel {...props} />);
+    await user.click(screen.getByRole("button", { name: "Copy Diagnostics" }));
+
+    await screen.findByText("Diagnostics copied to clipboard");
+    expect(document.execCommand).toHaveBeenCalledWith("copy");
+  });
+
+  it("runs pet recovery from settings", async () => {
+    const user = userEvent.setup();
+    const props = createProps();
+    render(<SettingsPanel {...props} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Bring Pet On Screen" }),
+    );
+
+    expect(props.onRecoverPetWindow).toHaveBeenCalledTimes(1);
+    await screen.findByText("Pet moved back on screen");
   });
 });

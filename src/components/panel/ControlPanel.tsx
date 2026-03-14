@@ -11,6 +11,7 @@ import { useProgress } from "../../hooks/useProgress";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { usePetEvents } from "../../hooks/usePetEvents";
 import { useContextAwareChill } from "../../hooks/useContextAwareChill";
+import { bringPetWindowOnScreen } from "../../lib/petWindow";
 import { getThemeTokens } from "../../lib/themes";
 import { downloadPetCard } from "../../lib/photoBooth";
 import { invokeMaybe } from "../../lib/tauri";
@@ -26,7 +27,16 @@ import { CustomizationPanel } from "./CustomizationPanel";
 import { PetPanel } from "./PetPanel";
 import { AchievementsPanel } from "./AchievementsPanel";
 
-type Tab = "timer" | "pet" | "goals" | "tasks" | "shop" | "stats" | "achievements" | "customize" | "settings";
+type Tab =
+  | "timer"
+  | "pet"
+  | "goals"
+  | "tasks"
+  | "shop"
+  | "stats"
+  | "achievements"
+  | "customize"
+  | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "timer", label: "Timer" },
@@ -59,13 +69,24 @@ export function ControlPanel() {
   const { tasks, addTask, toggleTask, deleteTask } = useTasks();
   const { settings, updateSettings } = useSettings();
   const { loadouts, saveLoadout, applyLoadout } = useCustomization();
-  const { status: guardrailStatus, events: guardrailEvents, evaluate, intervene } = useFocusGuardrails();
+  const {
+    status: guardrailStatus,
+    events: guardrailEvents,
+    evaluate,
+    intervene,
+  } = useFocusGuardrails();
   const { progress } = useProgress();
   const { summaries } = useAnalytics();
-  const { events: petEvents, activeQuest, rollFeedback, rollEvent, resolveEvent } = usePetEvents();
+  const {
+    events: petEvents,
+    activeQuest,
+    rollFeedback,
+    rollEvent,
+    resolveEvent,
+  } = usePetEvents();
   useContextAwareChill(settings, guardrailStatus);
   const theme = getThemeTokens(settings.uiTheme);
-  
+
   const exportData = async () => {
     const snapshot = await invokeMaybe<AppSnapshot>("export_app_snapshot");
     if (!snapshot) {
@@ -91,7 +112,9 @@ export function ControlPanel() {
     } catch {
       return "Import failed: invalid JSON file";
     }
-    const result = await invokeMaybe<string>("import_app_snapshot", { snapshot: parsed });
+    const result = await invokeMaybe<string>("import_app_snapshot", {
+      snapshot: parsed,
+    });
     if (!result) {
       return "Import failed";
     }
@@ -110,6 +133,11 @@ export function ControlPanel() {
 
   const getDiagnostics = async () => {
     return await invokeMaybe<AppDiagnostics>("get_app_diagnostics");
+  };
+
+  const recoverPetWindow = async () => {
+    const moved = await bringPetWindowOnScreen();
+    return moved ? "Pet moved back on screen" : "Pet is already visible";
   };
 
   return (
@@ -144,15 +172,20 @@ export function ControlPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex px-2" style={{ borderBottom: "1px solid var(--border-color)" }}>
+      <div
+        className="flex px-2"
+        style={{ borderBottom: "1px solid var(--border-color)" }}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className="flex-1 py-2 text-xs font-medium transition-colors border-b-2"
             style={{
-              color: tab === t.id ? "var(--accent-color)" : "var(--tab-inactive)",
-              borderBottomColor: tab === t.id ? "var(--accent-color)" : "transparent",
+              color:
+                tab === t.id ? "var(--accent-color)" : "var(--tab-inactive)",
+              borderBottomColor:
+                tab === t.id ? "var(--accent-color)" : "transparent",
             }}
           >
             {t.label}
@@ -161,7 +194,10 @@ export function ControlPanel() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ color: "var(--text-color)" }}>
+      <div
+        className="flex-1 overflow-y-auto p-4"
+        style={{ color: "var(--text-color)" }}
+      >
         {tab === "timer" && (
           <TimerDisplay
             phase={pomo.phase}
@@ -209,17 +245,12 @@ export function ControlPanel() {
           />
         )}
         {tab === "shop" && (
-          <ShopPanel
-            available={available}
-            ownedAccessories={pet.accessories}
-          />
+          <ShopPanel available={available} ownedAccessories={pet.accessories} />
         )}
         {tab === "stats" && (
           <StatsPanel progress={progress} summaries={summaries} />
         )}
-        {tab === "achievements" && (
-          <AchievementsPanel />
-        )}
+        {tab === "achievements" && <AchievementsPanel />}
         {tab === "customize" && (
           <CustomizationPanel
             settings={settings}
@@ -314,6 +345,7 @@ export function ControlPanel() {
             onImportData={importData}
             onResetData={resetData}
             onGetDiagnostics={getDiagnostics}
+            onRecoverPetWindow={recoverPetWindow}
             guardrailStatus={guardrailStatus}
             guardrailEvents={guardrailEvents}
             disabled={pomo.phase !== "idle"}

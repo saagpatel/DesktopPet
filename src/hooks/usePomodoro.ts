@@ -8,9 +8,14 @@ import {
   EVENT_TRAY_TIMER_RESUME,
   EVENT_TRAY_TIMER_START,
 } from "../lib/events";
+import { removeLocalStorage, writeLocalStorage } from "../lib/safeStorage";
 import { invokeMaybe, invokeOr, invokeQuiet, listenSafe } from "../lib/tauri";
 import type { TimerPreset } from "../lib/constants";
-import type { FocusGuardrailsStatus, Settings, TimerRuntimeState } from "../store/types";
+import type {
+  FocusGuardrailsStatus,
+  Settings,
+  TimerRuntimeState,
+} from "../store/types";
 
 type TimerPhase = "idle" | "work" | "break" | "celebrating";
 type NotificationEvent =
@@ -41,11 +46,16 @@ function isTimerPreset(value: string): value is TimerPreset {
 }
 
 function normalizePhase(phase: string): TimerPhase {
-  return TIMER_PHASES.includes(phase as TimerPhase) ? (phase as TimerPhase) : "idle";
+  return TIMER_PHASES.includes(phase as TimerPhase)
+    ? (phase as TimerPhase)
+    : "idle";
 }
 
-
-function getRotatingSample(hosts: string[], sampleSize: number, startIndex: number) {
+function getRotatingSample(
+  hosts: string[],
+  sampleSize: number,
+  startIndex: number,
+) {
   if (hosts.length <= sampleSize) {
     return hosts;
   }
@@ -63,7 +73,10 @@ function playSoundCue(volume: number) {
     const gain = audio.createGain();
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(880, audio.currentTime);
-    gain.gain.setValueAtTime(Math.max(0, Math.min(1, volume)) * 0.05, audio.currentTime);
+    gain.gain.setValueAtTime(
+      Math.max(0, Math.min(1, volume)) * 0.05,
+      audio.currentTime,
+    );
     oscillator.connect(gain);
     gain.connect(audio.destination);
     oscillator.start();
@@ -102,11 +115,13 @@ export function usePomodoro() {
   }, []);
 
   const setTrayBadge = useCallback(async (count: number) => {
-    const result = await invokeMaybe<TrayBadgeResult>("set_tray_badge", { count });
+    const result = await invokeMaybe<TrayBadgeResult>("set_tray_badge", {
+      count,
+    });
     if (!result || !result.usedTitle) {
-      window.localStorage.setItem("desktop-pet-tray-fallback-count", String(count));
+      writeLocalStorage("desktop-pet-tray-fallback-count", String(count));
     } else {
-      window.localStorage.removeItem("desktop-pet-tray-fallback-count");
+      removeLocalStorage("desktop-pet-tray-fallback-count");
     }
   }, []);
 
@@ -121,7 +136,7 @@ export function usePomodoro() {
       }));
       invokeQuiet("update_settings", { patch: { timerPreset: preset } });
     },
-    [state.phase]
+    [state.phase],
   );
 
   const start = useCallback(async () => {
@@ -161,21 +176,19 @@ export function usePomodoro() {
   }, [clearTimer, state.preset]);
 
   useEffect(() => {
-    invokeOr<TimerRuntimeState>(
-      "get_timer_runtime",
-      undefined,
-      {
-        phase: "idle",
-        secondsLeft: TIMER_PRESETS[DEFAULT_PRESET].work,
-        totalSeconds: TIMER_PRESETS[DEFAULT_PRESET].work,
-        paused: false,
-        sessionId: null,
-        sessionsCompleted: 0,
-        preset: DEFAULT_PRESET,
-        lastUpdatedAt: new Date().toISOString(),
-      }
-    ).then((runtime) => {
-      const preset = isTimerPreset(runtime.preset) ? runtime.preset : DEFAULT_PRESET;
+    invokeOr<TimerRuntimeState>("get_timer_runtime", undefined, {
+      phase: "idle",
+      secondsLeft: TIMER_PRESETS[DEFAULT_PRESET].work,
+      totalSeconds: TIMER_PRESETS[DEFAULT_PRESET].work,
+      paused: false,
+      sessionId: null,
+      sessionsCompleted: 0,
+      preset: DEFAULT_PRESET,
+      lastUpdatedAt: new Date().toISOString(),
+    }).then((runtime) => {
+      const preset = isTimerPreset(runtime.preset)
+        ? runtime.preset
+        : DEFAULT_PRESET;
       setState({
         phase: normalizePhase(runtime.phase),
         secondsLeft: runtime.secondsLeft,
@@ -208,7 +221,8 @@ export function usePomodoro() {
   // Tick timer
   useEffect(() => {
     clearTimer();
-    if (state.phase === "idle" || state.phase === "celebrating" || paused) return;
+    if (state.phase === "idle" || state.phase === "celebrating" || paused)
+      return;
 
     intervalRef.current = setInterval(() => {
       setState((prev) => {
@@ -292,7 +306,7 @@ export function usePomodoro() {
 
       const now = Date.now();
       toastHistoryRef.current = toastHistoryRef.current.filter(
-        (timestamp) => now - timestamp < 60 * 60 * 1000
+        (timestamp) => now - timestamp < 60 * 60 * 1000,
       );
       const allowToastByPolicy =
         !settings.quietModeEnabled &&
@@ -342,23 +356,26 @@ export function usePomodoro() {
       const sampledHosts = getRotatingSample(
         settings.focusBlocklist,
         5,
-        hostSampleOffsetRef.current
+        hostSampleOffsetRef.current,
       );
       hostSampleOffsetRef.current =
         settings.focusBlocklist.length === 0
           ? 0
           : (hostSampleOffsetRef.current + 5) % settings.focusBlocklist.length;
-      invokeMaybe<FocusGuardrailsStatus>("apply_focus_guardrails_intervention", {
-        phase: state.phase,
-        hosts: sampledHosts,
-      }).then((status) => {
+      invokeMaybe<FocusGuardrailsStatus>(
+        "apply_focus_guardrails_intervention",
+        {
+          phase: state.phase,
+          hosts: sampledHosts,
+        },
+      ).then((status) => {
         if (!status || !settings.focusGuardrailsEnabled) {
           setGuardrailMessage(null);
           return;
         }
         if (status.active) {
           setGuardrailMessage(
-            `${status.message} [${status.nudgeLevel}] action: ${status.recommendedAction}`
+            `${status.message} [${status.nudgeLevel}] action: ${status.recommendedAction}`,
           );
           if (
             status.recommendedAction === "pause_timer" &&
@@ -382,19 +399,23 @@ export function usePomodoro() {
         const sampledHosts = getRotatingSample(
           settings.focusBlocklist,
           5,
-          hostSampleOffsetRef.current
+          hostSampleOffsetRef.current,
         );
         hostSampleOffsetRef.current =
           settings.focusBlocklist.length === 0
             ? 0
-            : (hostSampleOffsetRef.current + 5) % settings.focusBlocklist.length;
-        invokeMaybe<FocusGuardrailsStatus>("apply_focus_guardrails_intervention", {
-          phase: "work",
-          hosts: sampledHosts,
-        }).then((status) => {
+            : (hostSampleOffsetRef.current + 5) %
+              settings.focusBlocklist.length;
+        invokeMaybe<FocusGuardrailsStatus>(
+          "apply_focus_guardrails_intervention",
+          {
+            phase: "work",
+            hosts: sampledHosts,
+          },
+        ).then((status) => {
           if (!status?.active) return;
           setGuardrailMessage(
-            `Intervention: ${status.message} (${status.matchedBlocklist.join(", ") || "no host details"}; sampled ${sampledHosts.length} hosts)`
+            `Intervention: ${status.message} (${status.matchedBlocklist.join(", ") || "no host details"}; sampled ${sampledHosts.length} hosts)`,
           );
           if (status.recommendedAction === "pause_timer" && !paused) {
             setPaused(true);
@@ -419,7 +440,7 @@ export function usePomodoro() {
         }
         const now = Date.now();
         toastHistoryRef.current = toastHistoryRef.current.filter(
-          (timestamp) => now - timestamp < 60 * 60 * 1000
+          (timestamp) => now - timestamp < 60 * 60 * 1000,
         );
         if (toastHistoryRef.current.length >= 3) {
           return;
@@ -476,27 +497,37 @@ export function usePomodoro() {
       });
     };
 
-    register(listenSafe(EVENT_TRAY_TIMER_START, () => {
-      if (state.phase === "idle") start();
-    }));
+    register(
+      listenSafe(EVENT_TRAY_TIMER_START, () => {
+        if (state.phase === "idle") start();
+      }),
+    );
 
-    register(listenSafe(EVENT_TRAY_TIMER_PAUSE, () => {
-      if (state.phase !== "idle" && !paused) pause();
-    }));
+    register(
+      listenSafe(EVENT_TRAY_TIMER_PAUSE, () => {
+        if (state.phase !== "idle" && !paused) pause();
+      }),
+    );
 
-    register(listenSafe(EVENT_TRAY_TIMER_RESUME, () => {
-      if (state.phase !== "idle" && paused) resume();
-    }));
+    register(
+      listenSafe(EVENT_TRAY_TIMER_RESUME, () => {
+        if (state.phase !== "idle" && paused) resume();
+      }),
+    );
 
-    register(listenSafe(EVENT_TRAY_TIMER_RESET, () => {
-      if (state.phase !== "idle") reset();
-    }));
+    register(
+      listenSafe(EVENT_TRAY_TIMER_RESET, () => {
+        if (state.phase !== "idle") reset();
+      }),
+    );
 
-    register(listenSafe<string>(EVENT_TRAY_SET_PRESET, (event) => {
-      if (isTimerPreset(event.payload)) {
-        setPreset(event.payload);
-      }
-    }));
+    register(
+      listenSafe<string>(EVENT_TRAY_SET_PRESET, (event) => {
+        if (isTimerPreset(event.payload)) {
+          setPreset(event.payload);
+        }
+      }),
+    );
 
     return () => {
       cancelled = true;

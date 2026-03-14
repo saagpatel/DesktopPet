@@ -7,6 +7,7 @@ describe("copyTextWithFallback", () => {
       configurable: true,
       value: undefined,
     });
+    document.execCommand = vi.fn().mockReturnValue(false);
   });
 
   it("copies payload when clipboard API is available", async () => {
@@ -36,6 +37,29 @@ describe("copyTextWithFallback", () => {
 
     const result = await copyTextWithFallback("payload", "Report");
     expect(result).toBe("Clipboard write blocked. Report: payload");
+  });
+
+  it("uses legacy document copy when clipboard API is blocked", async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error("blocked"));
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const result = await copyTextWithFallback("payload", "Report");
+
+    expect(document.execCommand).toHaveBeenCalledWith("copy");
+    expect(result).toBe("Report copied to clipboard");
+  });
+
+  it("uses legacy document copy when clipboard API is unavailable", async () => {
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const result = await copyTextWithFallback("payload", "Report");
+
+    expect(document.execCommand).toHaveBeenCalledWith("copy");
+    expect(result).toBe("Report copied to clipboard");
   });
 
   it("supports compact fallback messages without payload", async () => {

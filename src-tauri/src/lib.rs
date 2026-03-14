@@ -23,6 +23,7 @@ pub struct StoreLock(pub Mutex<()>);
 pub fn run() {
     tauri::Builder::default()
         .manage(StoreLock(Mutex::new(())))
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             commands::achievements::get_achievements,

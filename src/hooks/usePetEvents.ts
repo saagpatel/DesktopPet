@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { invokeMaybe, invokeOr } from "../lib/tauri";
+import { EVENT_PET_STATE_CHANGED } from "../lib/events";
+import { invokeMaybe, invokeOr, listenSafe } from "../lib/tauri";
 import type { PetEvent, PetQuest } from "../store/types";
 
 export function usePetEvents() {
@@ -7,12 +8,6 @@ export function usePetEvents() {
   const [activeQuest, setActiveQuest] = useState<PetQuest | null>(null);
   const [rollFeedback, setRollFeedback] = useState<PetEvent | null>(null);
   const mounted = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
 
   const refresh = useCallback(() => {
     Promise.all([
@@ -28,7 +23,26 @@ export function usePetEvents() {
   }, []);
 
   useEffect(() => {
+    mounted.current = true;
     refresh();
+
+    let cancelled = false;
+    let unlisten = () => {};
+    listenSafe(EVENT_PET_STATE_CHANGED, () => {
+      refresh();
+    }).then((fn) => {
+      if (cancelled) {
+        fn();
+        return;
+      }
+      unlisten = fn;
+    });
+
+    return () => {
+      cancelled = true;
+      mounted.current = false;
+      unlisten();
+    };
   }, [refresh]);
 
   const rollEvent = useCallback(async () => {
@@ -44,12 +58,24 @@ export function usePetEvents() {
     return event;
   }, [refresh]);
 
-  const resolveEvent = useCallback(async (eventId: string) => {
-    const updated = await invokeMaybe<PetEvent[]>("resolve_pet_event", { eventId });
-    if (!updated) return events;
-    setEvents(updated);
-    return updated;
-  }, [events]);
+  const resolveEvent = useCallback(
+    async (eventId: string) => {
+      const updated = await invokeMaybe<PetEvent[]>("resolve_pet_event", {
+        eventId,
+      });
+      if (!updated) return events;
+      setEvents(updated);
+      return updated;
+    },
+    [events],
+  );
 
-  return { events, activeQuest, rollFeedback, refresh, rollEvent, resolveEvent };
+  return {
+    events,
+    activeQuest,
+    rollFeedback,
+    refresh,
+    rollEvent,
+    resolveEvent,
+  };
 }

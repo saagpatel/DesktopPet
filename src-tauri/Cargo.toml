@@ -1,6 +1,6 @@
 [package]
 name = "desktop-pet"
-version = "0.1.0"
+version = "1.0.0"
 description = "Desktop Pet Pomodoro Buddy"
 authors = ["you"]
 license = "MIT"
@@ -22,3 +22,4 @@ serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
 log = "0.4"
+tauri-plugin-clipboard-manager = "2.3.2"
