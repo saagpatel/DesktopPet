@@ -43,7 +43,7 @@ The pet is SVG-based, and app data is stored locally on-device.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22 LTS
 - Rust toolchain (stable)
 - Xcode Command Line Tools on macOS (`xcode-select --install`)
 
@@ -67,12 +67,14 @@ npm run dev:lean
 ```
 
 What `npm run dev:lean` does:
+
 - Starts the app with the normal `npm run tauri dev` flow.
 - Redirects heavy build caches to temporary directories (Cargo target + Vite cache).
 - Automatically removes temporary caches and heavy build artifacts when you exit the app.
 - Prints before/after disk usage snapshots for major bloat paths.
 
 Disk vs speed tradeoff:
+
 - Lean mode uses less persistent disk.
 - Lean mode is usually slower on next startup because caches are rebuilt.
 - Normal `npm run tauri dev` keeps caches in-repo for faster repeated starts.
@@ -86,6 +88,7 @@ npm run clean:heavy
 ```
 
 This removes:
+
 - `dist/`
 - `artifacts/`
 - `src-tauri/target/`
@@ -98,6 +101,7 @@ npm run clean:all
 ```
 
 This runs `clean:heavy` and also removes:
+
 - `node_modules/`
 
 ## Verification
@@ -106,15 +110,33 @@ This runs `clean:heavy` and also removes:
 ./scripts/verify.sh
 ```
 
-This runs:
-- `npm test`
-- `npm run test:smoke`
-- `npm run test:pack-qa`
-- `npm run build`
-- `npm run check:performance-budget`
-- `npm run test:tauri-preflight`
-- `cargo test --manifest-path src-tauri/Cargo.toml`
-- `npm run tauri build`
+This runs the canonical command contract in `.codex/verify.commands`:
+
+- `npm run verify:required`
+
+`verify:required` includes:
+
+- Frontend quality gates (`typecheck`, tests, smoke, pack QA, build)
+- Performance gates (`check:performance-budget`, bundle/build delta checks, assets, memory)
+- Security scans (`npm audit`, `cargo audit`, `gitleaks`)
+- Tauri gates (`test:tauri-preflight`, `test:rust`, checked Tauri build)
+
+If your local workspace path contains `:`, Rust tests are skipped in non-strict mode because Cargo fails in that path shape on macOS. CI runs strict mode (`DESKTOP_PET_STRICT_RUST=1`) and fails if Rust checks cannot run.
+To run strict Tauri checks locally from a path-constrained workspace, use:
+
+```bash
+npm run verify:required:tauri:strict:temp
+```
+
+For full contract details, see [docs/execution-contract.md](./docs/execution-contract.md).
+
+## Operations Docs
+
+- [Execution Contract](./docs/execution-contract.md)
+- [Release Runbook](./docs/release-runbook.md)
+- [Security Gates](./docs/security-gates.md)
+- [Codex Feature Maturity Policy](./docs/codex-feature-maturity-policy.md)
+- [Codex Docs Drift Checklist](./docs/codex-docs-drift-checklist.md)
 
 ## Production Build
 

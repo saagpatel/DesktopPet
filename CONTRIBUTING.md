@@ -12,20 +12,14 @@ npm run tauri dev
 Run this before opening a PR:
 
 ```bash
-./scripts/verify.sh
+npm run verify:required
 ```
 
 Equivalent checks:
 
 ```bash
-npm test
-npm run test:smoke
-npm run test:pack-qa
-npm run build
-npm run check:performance-budget
-npm run test:tauri-preflight
-cargo test --manifest-path src-tauri/Cargo.toml
-npm run tauri build
+npm run verify:required:frontend
+npm run verify:required:tauri
 ```
 
 ## Engineering Rules
