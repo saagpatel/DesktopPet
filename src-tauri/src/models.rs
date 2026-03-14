@@ -523,15 +523,6 @@ impl Default for AchievementState {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AchievementStats {
-    pub total_unlocked: u32,
-    pub total_achievements: u32,
-    pub by_category: std::collections::HashMap<String, u32>,
-    pub recent_unlocks: Vec<Achievement>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

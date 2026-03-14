@@ -1,4 +1,2 @@
 # codex-os-managed
-pnpm git:guard:all
-pnpm perf:build
-pnpm perf:assets
+npm run verify:required

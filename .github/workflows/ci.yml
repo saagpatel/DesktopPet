@@ -22,21 +22,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run frontend tests
-        run: npm test
-
-      - name: Run frontend smoke tests
-        run: npm run test:smoke
-
-      - name: Run pack QA harness
-        run: npm run test:pack-qa
-
-      - name: Run frontend build
-        run: npm run build
-
-      - name: Run performance budget gate (PR only)
-        if: github.event_name == 'pull_request'
-        run: npm run check:performance-budget
+      - name: Run canonical frontend verification
+        run: npm run verify:required:frontend
 
       - name: Upload frontend QA artifacts
         if: always()
@@ -66,10 +53,7 @@ jobs:
         run: npm ci
 
       - name: Run smoke tests
-        run: npm run test:smoke
+        run: DESKTOP_PET_STRICT_RUST=1 npm run test:smoke
 
-      - name: Run Rust tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
-
-      - name: Build signed-ready bundle (unsigned in CI)
-        run: npm run tauri build
+      - name: Run canonical Tauri verification
+        run: DESKTOP_PET_STRICT_RUST=1 npm run verify:required:tauri

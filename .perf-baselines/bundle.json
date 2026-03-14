@@ -1,4 +1,12 @@
 {
-  "totalBytes": 0,
-  "capturedAt": "1970-01-01T00:00:00.000Z"
+  "source": "vite",
+  "totalBytes": 366000,
+  "assets": {
+    "ErrorBoundary-DYq79qco.js": 235025,
+    "panel-BVTXUIVY.js": 75615,
+    "panel-Dwz5LyA-.css": 21651,
+    "pet-C4Qc98Tp.css": 27306,
+    "pet-CTkeQdlr.js": 6403
+  },
+  "capturedAt": "2026-03-14T07:00:12.533Z"
 }
