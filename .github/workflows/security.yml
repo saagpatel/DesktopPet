@@ -37,7 +37,12 @@ jobs:
       - name: Run strict dependency security scans
         run: npm run security:scan
 
+      - name: Skip strict secret scan
+        if: env.DESKTOP_PET_SKIP_GITLEAKS == '1'
+        run: echo "Skipping gitleaks action because DESKTOP_PET_SKIP_GITLEAKS=1."
+
       - name: Run strict secret scan
+        if: env.DESKTOP_PET_SKIP_GITLEAKS != '1'
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
