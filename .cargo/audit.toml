@@ -1,0 +1,8 @@
+[advisories]
+# Tauri 2.11.1 still reaches quick-xml through plist 1.8.0, which pins
+# quick-xml ^0.38.0. Keep this scoped to the two unavoidable quick-xml
+# advisories and remove it when the Tauri/plist chain allows quick-xml >=0.41.0.
+ignore = [
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
+]
