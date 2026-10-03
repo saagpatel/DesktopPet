@@ -2,25 +2,11 @@
 
 ## Development Setup
 
-```bash
-npm install
-npm run tauri dev
-```
+Follow the [README setup](README.md#quick-start) for the locked npm installation and the distinction between frontend preview and native desktop development.
 
 ## Required Verification
 
-Run this before opening a PR:
-
-```bash
-npm run verify:required
-```
-
-Equivalent checks:
-
-```bash
-npm run verify:required:frontend
-npm run verify:required:tauri
-```
+Use the [execution contract](docs/execution-contract.md) for focused tests, broader required checks, formatting/typechecking, platform prerequisites and skip/strict-mode behavior. The broad required entrypoint remains `npm run verify:required`; focused checks help while editing and do not waive required CI gates. Report unavailable or skipped checks explicitly. UI changes also need the conditional browser/desktop checks described there.
 
 ## Engineering Rules
 

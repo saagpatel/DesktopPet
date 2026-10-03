@@ -36,10 +36,10 @@ The repo is active desktop product work. Existing local changes are PR-template 
 ## How To Run
 
 ```bash
-# Development
+# Frontend development
 npm run dev
 
-# Production build
+# Frontend production build
 npm run build
 ```
 
