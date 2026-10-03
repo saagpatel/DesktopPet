@@ -18,33 +18,45 @@ DesktopPet is a Tauri-powered desktop companion that floats above your windows a
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Rust 1.75+ and Cargo
-- Tauri CLI: `cargo install tauri-cli`
+
+- Node.js 22.13+ on the 22.x line and npm (the CI runtime; required by the locked Vite/jsdom toolchain).
+- For native desktop work: Rust `stable`, Cargo, and the [Tauri prerequisites for your OS](https://v2.tauri.app/start/prerequisites/). `Cargo.toml` declares Rust 1.77.2, but the locked dependency graph may require a newer toolchain.
+- Use the Tauri CLI pinned in `package.json` through `npm run tauri`; no global CLI installation is needed.
 
 ### Installation
+
+Run from the repository root:
+
 ```bash
-npm install
+npm ci
 ```
 
+For an isolated verification worktree, use `npm ci --ignore-scripts` to avoid the Husky `prepare` step changing shared Git hook configuration. This skips lifecycle scripts; it does not install hooks.
+
 ### Usage
+
 ```bash
-# Development
+# Frontend preview only
 npm run dev
 
-# Production build
+# Native desktop development (launches the app and uses local app state)
+npm run tauri -- dev
+
+# Frontend production build only
 npm run build
 ```
 
+See the [execution contract](docs/execution-contract.md) for focused tests, format/typecheck checks, native builds, strict verification and conditional browser/desktop checks.
+
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Shell | Tauri 2 (Rust backend) |
-| Language | TypeScript + React |
-| Bundler | Vite |
-| Testing | Vitest |
-| Styling | Tailwind CSS |
+| Layer    | Technology             |
+| -------- | ---------------------- |
+| Shell    | Tauri 2 (Rust backend) |
+| Language | TypeScript + React     |
+| Bundler  | Vite                   |
+| Testing  | Vitest                 |
+| Styling  | Tailwind CSS           |
 
 ## Architecture
 
