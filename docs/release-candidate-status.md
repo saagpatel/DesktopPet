@@ -56,7 +56,7 @@ Missing release inputs are documented in:
 ## Non-Blocking Notes
 
 - Updater packaging currently skips because no updater metadata or signatures are being produced.
-- The branch contains verified release-hardening and product-fix work that still needs to be committed and pushed.
+- Release-hardening and product-fix work is recorded in commits `83c1e91` and `3a5f4f6`.
 
 ## Recommended Next Action
 
