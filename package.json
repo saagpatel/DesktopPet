@@ -63,7 +63,7 @@
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
     "@tauri-apps/plugin-store": "^2.4.4",
     "react": "^19.2.8",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
@@ -76,7 +76,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.3",
+    "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.0.3",
     "commitizen": "^4.3.1",
     "husky": "^9.1.7",
@@ -100,10 +100,10 @@
     "ip-address": "10.2.0",
     "js-yaml": "4.3.0",
     "lodash": "4.18.1",
-    "postcss": "8.5.15",
+    "postcss": "8.5.26",
     "qs": "6.15.3",
     "tmp": "0.2.7",
-    "undici": "7.28.0",
+    "undici": "8.9.0",
     "uuid": "11.1.1"
   },
   "lint-staged": {
