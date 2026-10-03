@@ -64,7 +64,7 @@ Alternative: Apple ID app-specific password
 Run this first after credentials are available:
 
 ```bash
-npm run release:macos:preflight
+REQUIRE_MACOS_SIGNING=1 REQUIRE_MACOS_NOTARIZATION=1 npm run release:macos:preflight
 ```
 
 Expected result:
@@ -78,7 +78,7 @@ Expected result:
 3. Run:
 
 ```bash
-npm run release:macos:preflight
+REQUIRE_MACOS_SIGNING=1 REQUIRE_MACOS_NOTARIZATION=1 npm run release:macos:preflight
 npm run verify:required:tauri
 npm run release:artifacts:validate
 ```
