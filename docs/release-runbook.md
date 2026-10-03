@@ -17,15 +17,15 @@ npm run verify:required
 
 1. Create and push a semver tag (`vX.Y.Z`).
 2. GitHub `Release` workflow builds macOS artifacts.
-3. Workflow runs canonical strict Tauri verification:
-   - `DESKTOP_PET_STRICT_RUST=1 npm run verify:required:tauri`
-4. Workflow validates signing/notarization preflight when required:
+3. Workflow validates signing/notarization preflight when required:
    - `npm run release:macos:preflight`
+4. Workflow runs canonical strict Tauri verification:
+   - `DESKTOP_PET_STRICT_RUST=1 npm run verify:required:tauri`
 5. Workflow validates generated release artifacts:
    - `npm run release:artifacts:validate`
 6. Workflow packages updater assets when present:
    - `npm run release:updater:package`
-7. Workflow publishes release assets and checksum evidence.
+7. Workflow uploads the listed artifacts to GitHub Actions; tag builds publish DMGs and checksum evidence to GitHub Releases, plus updater assets when present.
 
 ## Artifact Evidence
 
@@ -54,7 +54,7 @@ If updater delivery is enabled later, set:
 REQUIRE_TAURI_UPDATER=1
 ```
 
-This makes artifact validation fail when updater metadata/signature files are missing.
+This makes artifact validation fail when neither `latest*.json` nor `*.sig` files exist under the bundle directory; it does not require both metadata and signatures.
 If updater assets exist, the workflow also publishes a packaged updater archive and manifest.
 
 ## Signing and Notarization (When Enabled)
