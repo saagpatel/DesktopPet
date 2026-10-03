@@ -12,7 +12,7 @@ DesktopPet is a Tauri-powered desktop companion that floats above your windows a
 - **Pomodoro integration** — 15/5, 25/5, and 50/10 presets with XP and coin rewards on completion
 - **Pet progression** — evolution stages, care stats, personality state, and 20+ unlockable achievements
 - **Shop + quests** — accessory catalog, rolling events, and active quests with completion rewards
-- **Focus guardrails** — allowlist/blocklist host matching with intervention overlays and event history
+- **Focus guardrails** — allowlist/blocklist host matching with timer messages, pause interventions, and event history
 - **Customization** — skins, scenes, themes, saved loadouts, and a photo booth for shareable pet cards
 
 ## Quick Start
@@ -60,7 +60,7 @@ See the [execution contract](docs/execution-contract.md) for focused tests, form
 
 ## Architecture
 
-Two Tauri windows — a transparent always-on-top pet overlay (`pet.html`) and a controls panel (`panel.html`) — communicate via Tauri commands and events. The Rust backend manages focus session timers, focus guardrail enforcement, and SQLite persistence. Pet state, quest logic, and shop catalog live in TypeScript stores synced to the Rust layer on each session boundary.
+Two Tauri windows — a transparent always-on-top pet overlay (`pet.html`) and a controls panel (`panel.html`) — communicate via Tauri commands and events. The React Pomodoro hook runs the countdown; the Rust backend persists timer runtime, evaluates focus guardrails, and stores app state in `store.json` through the Tauri store plugin. Pet state and quest logic are managed by Rust commands and exposed through React hooks via commands and events. The shop catalog is defined in both TypeScript constants and Rust commands; purchases are handled in Rust.
 
 ## License
 
