@@ -62,10 +62,10 @@ This is the broad required-check entrypoint used by `.codex/verify.commands`. It
 The default command can succeed with skipped native checks or security warnings. For complete native/security evidence on a prepared machine, use:
 
 ```bash
-DESKTOP_PET_STRICT_RUST=1 DESKTOP_PET_STRICT_SECURITY=1 npm run verify:required
+DESKTOP_PET_STRICT_RUST=1 DESKTOP_PET_STRICT_SECURITY=1 DESKTOP_PET_SKIP_GITLEAKS=0 npm run verify:required
 ```
 
-Inspect the result of every lane; a skip or warning is not evidence that that check passed. Strict security needs `cargo-audit` and `gitleaks` and requires advisory-service access; see [security gates](security-gates.md).
+Inspect the result of every lane; a skip or warning is not evidence that that check passed. Strict security needs `cargo-audit` and `gitleaks` and requires advisory-service access. An explicit `DESKTOP_PET_SKIP_GITLEAKS=1` still skips secrets even in strict mode; the command above sets it to `0`; see [security gates](security-gates.md).
 
 ## Required Check Breakdown
 

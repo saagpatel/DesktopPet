@@ -23,8 +23,10 @@ Default mode records warnings for failed or unavailable scans and may still exit
 Enable strict enforcement:
 
 ```bash
-DESKTOP_PET_STRICT_SECURITY=1 npm run security:scan
+DESKTOP_PET_STRICT_SECURITY=1 DESKTOP_PET_SKIP_GITLEAKS=0 npm run security:scan
 ```
+
+`DESKTOP_PET_SKIP_GITLEAKS=1` explicitly skips the secret scan even in strict mode. Set it to `0`, as above, when requiring complete local scan coverage.
 
 Behavior in strict mode:
 
