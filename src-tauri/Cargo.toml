@@ -5,7 +5,7 @@ description = "Desktop Pet Pomodoro Buddy"
 authors = ["you"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [lib]
 name = "app_lib"
