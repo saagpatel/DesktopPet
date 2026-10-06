@@ -6,10 +6,15 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: read
+
 jobs:
   build-macos:
     name: Build macOS Release Artifacts
     runs-on: macos-latest
+    permissions:
+      contents: write
     env:
       REQUIRE_MACOS_SIGNING: ${{ vars.REQUIRE_MACOS_SIGNING }}
       REQUIRE_MACOS_NOTARIZATION: ${{ vars.REQUIRE_MACOS_NOTARIZATION }}
@@ -25,16 +30,16 @@ jobs:
       APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable (2026-10-05)
 
       - name: Install dependencies
         run: npm ci
@@ -52,7 +57,7 @@ jobs:
         run: npm run release:updater:package
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktop-pet-macos
           path: |
@@ -66,7 +71,7 @@ jobs:
 
       - name: Publish GitHub Release (tag builds only)
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             src-tauri/target/release/bundle/dmg/*.dmg
@@ -75,7 +80,7 @@ jobs:
 
       - name: Publish updater release assets (tag builds only)
         if: startsWith(github.ref, 'refs/tags/') && hashFiles('artifacts/release/updater-assets.tar.gz') != ''
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             artifacts/release/updater-artifacts.txt
