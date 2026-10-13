@@ -65,7 +65,14 @@ describe("TimerDisplay", () => {
   it("calls onResume when Resume clicked", async () => {
     const user = userEvent.setup();
     const onResume = vi.fn();
-    render(<TimerDisplay {...baseProps} phase="work" paused={true} onResume={onResume} />);
+    render(
+      <TimerDisplay
+        {...baseProps}
+        phase="work"
+        paused={true}
+        onResume={onResume}
+      />,
+    );
     await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(onResume).toHaveBeenCalledTimes(1);
   });
@@ -77,11 +84,20 @@ describe("TimerDisplay", () => {
 
   it("does not show Reset button when idle", () => {
     render(<TimerDisplay {...baseProps} />);
-    expect(screen.queryByRole("button", { name: "Reset" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Reset" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows 'Break' label during break phase", () => {
-    render(<TimerDisplay {...baseProps} phase="break" secondsLeft={300} totalSeconds={300} />);
+    render(
+      <TimerDisplay
+        {...baseProps}
+        phase="break"
+        secondsLeft={300}
+        totalSeconds={300}
+      />,
+    );
     expect(screen.getByText("Break")).toBeInTheDocument();
   });
 

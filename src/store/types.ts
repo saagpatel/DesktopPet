@@ -4,6 +4,7 @@ export interface PetState {
   currentStage: number;
   animationState: AnimationState;
   accessories: ShopItemId[];
+  ownedAccessories?: ShopItemId[];
   totalPomodoros: number;
   speciesId: string;
   evolutionThresholds: number[];
@@ -37,6 +38,7 @@ export interface Task {
   id: string;
   title: string;
   completed: boolean;
+  rewardClaimed?: boolean;
   createdAt: string;
 }
 
@@ -187,7 +189,8 @@ export interface FocusGuardrailEvent {
   createdAt: string;
 }
 
-export type AchievementCategory = "focus" | "streak" | "pet" | "progression" | "special";
+export type AchievementCategory =
+  "focus" | "streak" | "pet" | "progression" | "special";
 
 export interface Achievement {
   id: string;
@@ -236,6 +239,7 @@ export interface AppState {
 }
 
 export interface AppSnapshot {
+  format: string;
   schemaVersion: number;
   exportedAt: string;
   pet: PetState;
@@ -251,6 +255,12 @@ export interface AppSnapshot {
   petEvents: PetEvent[];
   petActiveQuest: PetQuest | null;
   focusGuardrailEvents: FocusGuardrailEvent[];
+  achievementState: AchievementState;
+  questRecentFocus: number;
+  questRecentCare: number;
+  questLastKind: string | null;
+  questLastRollAt: string | null;
+  breakEvents: string[];
 }
 
 export interface AppDiagnostics {

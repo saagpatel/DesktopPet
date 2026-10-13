@@ -22,7 +22,11 @@
     "interactionCadenceMs": [700, 1240],
     "chillPosture": "hover"
   },
-  "stageSpriteFiles": ["axolotl-stage-0.svg", "axolotl-stage-1.svg", "axolotl-stage-2.svg"],
+  "stageSpriteFiles": [
+    "axolotl-stage-0.svg",
+    "axolotl-stage-1.svg",
+    "axolotl-stage-2.svg"
+  ],
   "accessoryAnchors": {
     "head": { "x": 100, "y": 44 },
     "neck": { "x": 100, "y": 120 },

@@ -7,7 +7,10 @@ export function useCoins() {
   const [coins, setCoins] = useState<CoinBalance>({ total: 0, spent: 0 });
 
   useEffect(() => {
-    invokeOr<CoinBalance>("get_coin_balance", undefined, { total: 0, spent: 0 }).then(setCoins);
+    invokeOr<CoinBalance>("get_coin_balance", undefined, {
+      total: 0,
+      spent: 0,
+    }).then(setCoins);
 
     let cancelled = false;
     let unlisten = () => {};
@@ -27,12 +30,15 @@ export function useCoins() {
     };
   }, []);
 
-  const spend = useCallback(async (amount: number) => {
-    const updated = await invokeMaybe<CoinBalance>("spend_coins", { amount });
-    if (!updated) return coins;
-    setCoins(updated);
-    return updated;
-  }, [coins]);
+  const spend = useCallback(
+    async (amount: number) => {
+      const updated = await invokeMaybe<CoinBalance>("spend_coins", { amount });
+      if (!updated) return coins;
+      setCoins(updated);
+      return updated;
+    },
+    [coins],
+  );
 
   return { coins, available: coins.total - coins.spent, spend };
 }

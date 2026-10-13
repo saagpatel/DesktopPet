@@ -48,6 +48,10 @@ fn shop_catalog() -> Vec<ShopItem> {
     ]
 }
 
+pub fn accessory_count() -> u32 {
+    shop_catalog().len().try_into().unwrap_or(u32::MAX)
+}
+
 #[tauri::command]
 pub fn get_shop_items() -> Vec<ShopItem> {
     shop_catalog()
@@ -67,7 +71,7 @@ pub fn purchase_item(
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
 
-    if pet.accessories.contains(&item_id) {
+    if pet.owned_accessories.contains(&item_id) {
         return Err("Already owned".to_string());
     }
 
@@ -86,10 +90,11 @@ pub fn purchase_item(
         return Err("Insufficient coins".to_string());
     }
 
-    coins.spent += item.cost;
+    coins.spent = coins.spent.saturating_add(item.cost);
     store.set("coins", json!(coins));
     let _ = app.emit(EVENT_COINS_CHANGED, &coins);
 
+    pet.owned_accessories.push(item_id.clone());
     pet.accessories.push(item_id);
     store.set("pet", json!(pet));
     let _ = app.emit(EVENT_PET_STATE_CHANGED, &pet);

@@ -19,7 +19,7 @@ const ACCESSORY_GLYPHS: Record<ShopItemId, string> = {
 
 function anchorForAccessory(
   accessory: ShopItemId,
-  anchors: ReturnType<typeof getSpeciesPackById>["accessoryAnchors"]
+  anchors: ReturnType<typeof getSpeciesPackById>["accessoryAnchors"],
 ) {
   if (accessory === "party_hat") return anchors.head;
   if (accessory === "bow_tie" || accessory === "scarf") return anchors.neck;
@@ -28,10 +28,16 @@ function anchorForAccessory(
   return anchors.head;
 }
 
-export function PetCharacter({ stage, accessories, speciesId, speciesMotionClass }: Props) {
+export function PetCharacter({
+  stage,
+  accessories,
+  speciesId,
+  speciesMotionClass,
+}: Props) {
   const species = getSpeciesPackById(speciesId);
   const stageIndex = Math.max(0, Math.min(2, stage));
-  const motionClass = speciesMotionClass ?? `species-${species.idleBehavior.baseAnimation}`;
+  const motionClass =
+    speciesMotionClass ?? `species-${species.idleBehavior.baseAnimation}`;
 
   return (
     <div className="relative w-[220px] h-[220px] flex items-center justify-center">

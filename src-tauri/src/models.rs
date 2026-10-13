@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub const CURRENT_SCHEMA_VERSION: u32 = 4;
+pub const CURRENT_SCHEMA_VERSION: u32 = 5;
 
 fn default_quest_kind() -> String {
     "focus_sessions".to_string()
@@ -13,6 +13,8 @@ pub struct PetState {
     pub current_stage: u32,
     pub animation_state: String,
     pub accessories: Vec<String>,
+    #[serde(default)]
+    pub owned_accessories: Vec<String>,
     pub total_pomodoros: u32,
     pub species_id: String,
     pub evolution_thresholds: Vec<u32>,
@@ -35,6 +37,7 @@ impl Default for PetState {
             current_stage: 0,
             animation_state: "idle".to_string(),
             accessories: vec![],
+            owned_accessories: vec![],
             total_pomodoros: 0,
             species_id: "penguin".to_string(),
             evolution_thresholds: vec![0, 5, 15],
@@ -87,17 +90,11 @@ pub struct PomodoroSession {
     pub break_duration: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CoinBalance {
     pub total: u32,
     pub spent: u32,
-}
-
-impl Default for CoinBalance {
-    fn default() -> Self {
-        Self { total: 0, spent: 0 }
-    }
 }
 
 impl CoinBalance {
@@ -112,6 +109,8 @@ pub struct Task {
     pub id: String,
     pub title: String,
     pub completed: bool,
+    #[serde(default)]
+    pub reward_claimed: bool,
     pub created_at: String,
 }
 
@@ -430,9 +429,10 @@ pub struct FocusGuardrailEvent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSnapshot {
+    #[serde(default)]
+    pub format: String,
     pub schema_version: u32,
     pub exported_at: String,
     pub pet: PetState,
@@ -448,11 +448,24 @@ pub struct AppSnapshot {
     pub pet_events: Vec<PetEvent>,
     pub pet_active_quest: Option<PetQuest>,
     pub focus_guardrail_events: Vec<FocusGuardrailEvent>,
+    #[serde(default)]
+    pub achievement_state: AchievementState,
+    #[serde(default)]
+    pub quest_recent_focus: u32,
+    #[serde(default)]
+    pub quest_recent_care: u32,
+    #[serde(default)]
+    pub quest_last_kind: Option<String>,
+    #[serde(default)]
+    pub quest_last_roll_at: Option<String>,
+    #[serde(default)]
+    pub break_events: Vec<String>,
 }
 
 impl Default for AppSnapshot {
     fn default() -> Self {
         Self {
+            format: "desktop-pet-backup".to_string(),
             schema_version: CURRENT_SCHEMA_VERSION,
             exported_at: chrono::Utc::now().to_rfc3339(),
             pet: PetState::default(),
@@ -468,6 +481,12 @@ impl Default for AppSnapshot {
             pet_events: vec![],
             pet_active_quest: None,
             focus_guardrail_events: vec![],
+            achievement_state: AchievementState::default(),
+            quest_recent_focus: 0,
+            quest_recent_care: 0,
+            quest_last_kind: None,
+            quest_last_roll_at: None,
+            break_events: vec![],
         }
     }
 }
@@ -504,23 +523,13 @@ pub struct Achievement {
     pub hidden: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
 pub struct AchievementState {
     pub achievements: Vec<Achievement>,
     pub total_unlocked: u32,
     pub last_unlocked_id: Option<String>,
-}
-
-impl Default for AchievementState {
-    fn default() -> Self {
-        Self {
-            achievements: vec![],
-            total_unlocked: 0,
-            last_unlocked_id: None,
-        }
-    }
 }
 
 #[cfg(test)]
@@ -631,6 +640,7 @@ mod tests {
             current_stage: 1,
             animation_state: "working".to_string(),
             accessories: vec!["party_hat".to_string(), "bow_tie".to_string()],
+            owned_accessories: vec!["party_hat".to_string(), "bow_tie".to_string()],
             total_pomodoros: 7,
             species_id: "penguin".to_string(),
             evolution_thresholds: vec![0, 5, 15],
@@ -659,6 +669,7 @@ mod tests {
             current_stage: 2,
             animation_state: "celebrating".to_string(),
             accessories: vec!["sunglasses".to_string()],
+            owned_accessories: vec!["sunglasses".to_string()],
             total_pomodoros: 20,
             species_id: "penguin".to_string(),
             evolution_thresholds: vec![0, 5, 15],
@@ -775,6 +786,7 @@ mod tests {
             id: "test".to_string(),
             title: "Test".to_string(),
             completed: false,
+            reward_claimed: false,
             created_at: "2025-01-01".to_string(),
         };
         let json = serde_json::to_value(&t).unwrap();
@@ -788,6 +800,7 @@ mod tests {
             id: "t1".to_string(),
             title: "Write tests".to_string(),
             completed: true,
+            reward_claimed: false,
             created_at: "2025-01-01T12:00:00Z".to_string(),
         };
         let json_str = serde_json::to_string(&original).unwrap();
@@ -923,10 +936,7 @@ mod tests {
         assert!(!restored.quiet_mode_enabled);
         assert!(restored.focus_mode_enabled);
         assert_eq!(restored.animation_budget, "low");
-        assert_eq!(
-            restored.meeting_hosts,
-            vec!["meet.google.com".to_string()]
-        );
+        assert_eq!(restored.meeting_hosts, vec!["meet.google.com".to_string()]);
         assert_eq!(restored.heavy_typing_threshold_cpm, 260);
         assert_eq!(
             restored.enabled_seasonal_packs,

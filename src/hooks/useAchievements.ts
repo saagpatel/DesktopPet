@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getAchievements, getAchievementStats, checkAchievementProgress } from "../lib/tauri";
+import {
+  getAchievements,
+  getAchievementStats,
+  checkAchievementProgress,
+} from "../lib/tauri";
 import { listenSafe } from "../lib/tauri";
 import type { Achievement, AchievementStats } from "../store/types";
 
@@ -17,7 +21,8 @@ export function useAchievements() {
     locked: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockedPayload | null>(null);
+  const [recentUnlock, setRecentUnlock] =
+    useState<AchievementUnlockedPayload | null>(null);
 
   // Load achievements on mount
   useEffect(() => {
@@ -51,7 +56,7 @@ export function useAchievements() {
 
           // Clear recent unlock after 5 seconds
           setTimeout(() => setRecentUnlock(null), 5000);
-        }
+        },
       );
     };
 
@@ -94,7 +99,10 @@ export function useAchievements() {
   // Get achievement progress percentage
   const getProgressPercent = (achievement: Achievement) => {
     if (achievement.target === 0) return 0;
-    return Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
+    return Math.min(
+      100,
+      Math.round((achievement.progress / achievement.target) * 100),
+    );
   };
 
   // Get overall completion percentage

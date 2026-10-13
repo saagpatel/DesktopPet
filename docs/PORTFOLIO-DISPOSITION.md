@@ -26,6 +26,7 @@ Developer ID signing + notarization credentials**, which is
 operator-only work.
 
 For the full detail, see (in this order):
+
 - `docs/release-candidate-status.md`
 - `docs/macos-signing-handoff.md`
 - `docs/release-runbook.md`
@@ -37,11 +38,11 @@ system what to do given those.
 
 ## Portfolio operating system instructions
 
-| Aspect | Posture |
-|---|---|
-| Portfolio status | `Release Frozen` (not `Cold Storage`, not `Active`) |
-| Review cadence | Suspend overdue counting |
-| Next review trigger | When Apple signing credentials become available, or when the operator explicitly decides to ship unsigned (not currently planned) |
+| Aspect               | Posture                                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Portfolio status     | `Release Frozen` (not `Cold Storage`, not `Active`)                                                                                                          |
+| Review cadence       | Suspend overdue counting                                                                                                                                     |
+| Next review trigger  | When Apple signing credentials become available, or when the operator explicitly decides to ship unsigned (not currently planned)                            |
 | Resurface conditions | (a) signing credentials configured in CI, or (b) operator decides to abandon ship and switch to `Cold Storage` with disposition `RC reached, ship abandoned` |
 
 ---
@@ -60,7 +61,7 @@ system what to do given those.
 
 The distinction matters because portfolio reviews should treat these
 differently. Active projects get attention. Cold projects get
-ignored. Frozen projects get *neither* — they sit until the unblocking
+ignored. Frozen projects get _neither_ — they sit until the unblocking
 condition flips, then move quickly.
 
 ---
@@ -89,7 +90,7 @@ When portfolio operating system flips this row to `Active`:
 1. Delete the abandoned `codex/*` WIP branches that accumulated during
    the freeze — they don't reflect the shipping artifact.
 2. Re-verify on current toolchain: `npm install && npm run
-   verify:required && npm run verify:required:tauri`.
+verify:required && npm run verify:required:tauri`.
 3. Re-run the packaged-app smoke checks listed in
    `release-candidate-status.md`.
 4. Only then proceed to signing — do not assume the 2026-03-14 build
@@ -99,11 +100,11 @@ When portfolio operating system flips this row to `Active`:
 
 ## Last known reference
 
-| Field | Value |
-|---|---|
-| Last commit on `main` | `d7fcfd3` docs(release): add pre-signing handoff |
-| Date | 2026-03-14 |
-| Build verification status | green |
-| Smoke test status | green |
-| Blocker | Apple signing + notarization (operator-only) |
-| Local WIP branches | several `codex/*` branches, not reflected in shipping artifact, safe to delete on reactivation |
+| Field                     | Value                                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| Last commit on `main`     | `d7fcfd3` docs(release): add pre-signing handoff                                               |
+| Date                      | 2026-03-14                                                                                     |
+| Build verification status | green                                                                                          |
+| Smoke test status         | green                                                                                          |
+| Blocker                   | Apple signing + notarization (operator-only)                                                   |
+| Local WIP branches        | several `codex/*` branches, not reflected in shipping artifact, safe to delete on reactivation |

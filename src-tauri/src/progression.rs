@@ -32,7 +32,7 @@ fn update_streak(progress: &mut UserProgress, active_date: &str) {
                 _ => false,
             };
             progress.streak_days = if continues_streak {
-                progress.streak_days + 1
+                progress.streak_days.saturating_add(1)
             } else {
                 1
             };
@@ -132,16 +132,20 @@ pub fn record_focus_session(
     coins_earned: u32,
 ) -> Result<(), String> {
     mutate_progress(app, |progress| {
-        progress.total_sessions += 1;
-        progress.total_focus_minutes += work_duration_secs / 60;
-        progress.xp_total += XP_PER_POMODORO;
+        progress.total_sessions = progress.total_sessions.saturating_add(1);
+        progress.total_focus_minutes = progress
+            .total_focus_minutes
+            .saturating_add(work_duration_secs / 60);
+        progress.xp_total = progress.xp_total.saturating_add(XP_PER_POMODORO);
     })?;
 
     mutate_today_summary(app, |summary| {
-        summary.sessions_completed += 1;
-        summary.focus_minutes += work_duration_secs / 60;
-        summary.coins_earned += coins_earned;
-        summary.xp_earned += XP_PER_POMODORO;
+        summary.sessions_completed = summary.sessions_completed.saturating_add(1);
+        summary.focus_minutes = summary
+            .focus_minutes
+            .saturating_add(work_duration_secs / 60);
+        summary.coins_earned = summary.coins_earned.saturating_add(coins_earned);
+        summary.xp_earned = summary.xp_earned.saturating_add(XP_PER_POMODORO);
     })?;
 
     Ok(())
@@ -149,13 +153,13 @@ pub fn record_focus_session(
 
 pub fn record_task_completion(app: &AppHandle) -> Result<(), String> {
     mutate_progress(app, |progress| {
-        progress.total_tasks_completed += 1;
-        progress.xp_total += XP_PER_TASK_COMPLETION;
+        progress.total_tasks_completed = progress.total_tasks_completed.saturating_add(1);
+        progress.xp_total = progress.xp_total.saturating_add(XP_PER_TASK_COMPLETION);
     })?;
 
     mutate_today_summary(app, |summary| {
-        summary.tasks_completed += 1;
-        summary.xp_earned += XP_PER_TASK_COMPLETION;
+        summary.tasks_completed = summary.tasks_completed.saturating_add(1);
+        summary.xp_earned = summary.xp_earned.saturating_add(XP_PER_TASK_COMPLETION);
     })?;
 
     Ok(())
@@ -163,12 +167,12 @@ pub fn record_task_completion(app: &AppHandle) -> Result<(), String> {
 
 pub fn record_goal_completion(app: &AppHandle) -> Result<(), String> {
     mutate_progress(app, |progress| {
-        progress.xp_total += XP_PER_GOAL_COMPLETION;
+        progress.xp_total = progress.xp_total.saturating_add(XP_PER_GOAL_COMPLETION);
     })?;
 
     mutate_today_summary(app, |summary| {
-        summary.goals_completed += 1;
-        summary.xp_earned += XP_PER_GOAL_COMPLETION;
+        summary.goals_completed = summary.goals_completed.saturating_add(1);
+        summary.xp_earned = summary.xp_earned.saturating_add(XP_PER_GOAL_COMPLETION);
     })?;
 
     Ok(())
@@ -176,9 +180,9 @@ pub fn record_goal_completion(app: &AppHandle) -> Result<(), String> {
 
 pub fn record_guardrail_intervention(app: &AppHandle, nudge_level: &str) -> Result<(), String> {
     mutate_today_summary(app, |summary| {
-        summary.guardrails_interventions += 1;
+        summary.guardrails_interventions = summary.guardrails_interventions.saturating_add(1);
         if nudge_level == "high" {
-            summary.high_nudges += 1;
+            summary.high_nudges = summary.high_nudges.saturating_add(1);
         }
     })?;
     Ok(())

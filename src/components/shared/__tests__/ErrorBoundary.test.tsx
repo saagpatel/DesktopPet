@@ -13,7 +13,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <div data-testid="test-child">Test Content</div>
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByTestId("test-child")).toBeInTheDocument();
@@ -29,11 +29,13 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-    expect(screen.getByText(/DesktopPet encountered an unexpected error/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/DesktopPet encountered an unexpected error/i),
+    ).toBeInTheDocument();
   });
 
   it("should display error details in development mode", () => {
@@ -47,7 +49,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     // Error details should be in a collapsed details element
@@ -67,7 +69,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary onError={onErrorMock}>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(onErrorMock).toHaveBeenCalled();
@@ -89,7 +91,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ConditionalError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
@@ -116,9 +118,11 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
-    expect(screen.getByRole("button", { name: /Reload App/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Reload App/i }),
+    ).toBeInTheDocument();
   });
 });

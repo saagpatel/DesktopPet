@@ -10,15 +10,21 @@ vi.mock("../../lib/tauri", () => ({
     if (command === "toggle_task") {
       // Return updated task list with the toggled task
       return [
-        { id: "task-1", title: "First task", completed: args.taskId === "task-1" ? true : false },
-        { id: "task-2", title: "Second task", completed: args.taskId === "task-2" ? false : true },
+        {
+          id: "task-1",
+          title: "First task",
+          completed: args.taskId === "task-1" ? true : false,
+        },
+        {
+          id: "task-2",
+          title: "Second task",
+          completed: args.taskId === "task-2" ? false : true,
+        },
       ];
     }
     if (command === "delete_task") {
       // Return updated task list without the deleted task
-      return [
-        { id: "task-2", title: "Second task", completed: true },
-      ];
+      return [{ id: "task-2", title: "Second task", completed: true }];
     }
     return null;
   }),
@@ -82,7 +88,9 @@ describe("useTasks", () => {
     });
 
     await waitFor(() => {
-      const updatedTask = result.current.tasks.find(t => t.id === firstTask.id);
+      const updatedTask = result.current.tasks.find(
+        (t) => t.id === firstTask.id,
+      );
       if (updatedTask) {
         expect(updatedTask.completed).toBe(!wasCompleted);
       }

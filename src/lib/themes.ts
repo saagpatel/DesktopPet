@@ -61,7 +61,7 @@ export const THEME_TOKENS: Record<ThemeName, ThemeTokens> = {
 
 export function getThemeTokens(theme: string): ThemeTokens {
   const normalized = (["sunrise", "dusk", "mint", "mono"] as const).includes(
-    theme as ThemeName
+    theme as ThemeName,
   )
     ? (theme as ThemeName)
     : "sunrise";

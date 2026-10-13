@@ -22,7 +22,13 @@ export function PetStage1({ accessories }: Props) {
       <circle cx="96" cy="73" r="2.5" fill="white" />
 
       {/* Mouth */}
-      <path d="M 67 92 Q 75 100 83 92" stroke="#2D3748" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path
+        d="M 67 92 Q 75 100 83 92"
+        stroke="#2D3748"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
 
       {/* Blush spots */}
       <ellipse cx="48" cy="90" rx="8" ry="5" fill="#FFB3B3" opacity="0.5" />
@@ -47,19 +53,50 @@ export function PetStage1({ accessories }: Props) {
       )}
       {accessories.includes("sunglasses") && (
         <g>
-          <rect x="46" y="69" width="22" height="14" rx="4" fill="#1A1A2E" opacity="0.85" />
-          <rect x="82" y="69" width="22" height="14" rx="4" fill="#1A1A2E" opacity="0.85" />
-          <line x1="68" y1="76" x2="82" y2="76" stroke="#1A1A2E" strokeWidth="2" />
+          <rect
+            x="46"
+            y="69"
+            width="22"
+            height="14"
+            rx="4"
+            fill="#1A1A2E"
+            opacity="0.85"
+          />
+          <rect
+            x="82"
+            y="69"
+            width="22"
+            height="14"
+            rx="4"
+            fill="#1A1A2E"
+            opacity="0.85"
+          />
+          <line
+            x1="68"
+            y1="76"
+            x2="82"
+            y2="76"
+            stroke="#1A1A2E"
+            strokeWidth="2"
+          />
         </g>
       )}
       {accessories.includes("scarf") && (
-        <path d="M 35 105 Q 75 120 115 105 Q 110 115 75 118 Q 40 115 35 105" fill="#E74C3C" />
+        <path
+          d="M 35 105 Q 75 120 115 105 Q 110 115 75 118 Q 40 115 35 105"
+          fill="#E74C3C"
+        />
       )}
       {accessories.includes("apple") && (
         <g>
           <circle cx="30" cy="100" r="8" fill="#E74C3C" />
           <ellipse cx="30" cy="100" rx="8" ry="7" fill="#FF6B6B" />
-          <path d="M 30 92 Q 33 86 36 89" stroke="#4A7C3F" strokeWidth="1.5" fill="none" />
+          <path
+            d="M 30 92 Q 33 86 36 89"
+            stroke="#4A7C3F"
+            strokeWidth="1.5"
+            fill="none"
+          />
         </g>
       )}
       {accessories.includes("cookie") && (

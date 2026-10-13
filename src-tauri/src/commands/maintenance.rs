@@ -1,3 +1,4 @@
+use serde::de::DeserializeOwned;
 use serde_json::json;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
@@ -10,118 +11,116 @@ use crate::{
     models::{AppDiagnostics, AppSnapshot, CURRENT_SCHEMA_VERSION},
 };
 
-const MAX_TASKS: usize = 2_000;
-const MAX_SESSIONS: usize = 10_000;
-const MAX_SUMMARIES: usize = 365;
-const MAX_LOADOUTS: usize = 200;
-const MAX_PET_EVENTS: usize = 200;
-const MAX_GUARDRAIL_EVENTS: usize = 500;
-
-fn cap_len<T>(values: &mut Vec<T>, max_len: usize) {
-    if values.len() > max_len {
-        values.truncate(max_len);
-    }
+fn sanitize_snapshot(mut snapshot: AppSnapshot) -> AppSnapshot {
+    // Backups preserve domain values exactly; validation belongs at mutation boundaries.
+    snapshot.schema_version = CURRENT_SCHEMA_VERSION;
+    snapshot
 }
 
-fn sanitize_snapshot(mut snapshot: AppSnapshot) -> AppSnapshot {
-    snapshot.schema_version = CURRENT_SCHEMA_VERSION;
-
-    crate::commands::settings::sanitize_settings(&mut snapshot.settings);
-
-    snapshot.tasks.retain(|task| !task.title.trim().is_empty());
-    for task in &mut snapshot.tasks {
-        task.title = task.title.trim().chars().take(140).collect();
+fn validate_snapshot(snapshot: &AppSnapshot) -> Result<(), String> {
+    if snapshot.schema_version > CURRENT_SCHEMA_VERSION {
+        return Err(format!(
+            "Backup schema {} is newer than supported schema {}",
+            snapshot.schema_version, CURRENT_SCHEMA_VERSION
+        ));
     }
+    if snapshot.schema_version < CURRENT_SCHEMA_VERSION.saturating_sub(1) {
+        return Err(format!(
+            "Unsupported backup schema {}; expected {} or {}",
+            snapshot.schema_version,
+            CURRENT_SCHEMA_VERSION - 1,
+            CURRENT_SCHEMA_VERSION
+        ));
+    }
+    if snapshot.schema_version == CURRENT_SCHEMA_VERSION && snapshot.format != "desktop-pet-backup"
+    {
+        return Err("Backup format identity is invalid".to_string());
+    }
+    if snapshot.schema_version == CURRENT_SCHEMA_VERSION - 1
+        && !snapshot.format.is_empty()
+        && snapshot.format != "desktop-pet-backup"
+    {
+        return Err("Backup format identity is invalid".to_string());
+    }
+    chrono::DateTime::parse_from_rfc3339(&snapshot.exported_at)
+        .map_err(|_| "Backup exportedAt must be an RFC 3339 timestamp".to_string())?;
+    Ok(())
+}
 
-    snapshot.timer_runtime.total_seconds =
-        snapshot.timer_runtime.total_seconds.clamp(60, 3 * 60 * 60);
-    snapshot.timer_runtime.seconds_left = snapshot
-        .timer_runtime
-        .seconds_left
-        .min(snapshot.timer_runtime.total_seconds);
-
-    cap_len(&mut snapshot.tasks, MAX_TASKS);
-    cap_len(&mut snapshot.sessions, MAX_SESSIONS);
-    cap_len(&mut snapshot.summaries, MAX_SUMMARIES);
-    cap_len(&mut snapshot.customization_loadouts, MAX_LOADOUTS);
-    cap_len(&mut snapshot.pet_events, MAX_PET_EVENTS);
-    cap_len(&mut snapshot.focus_guardrail_events, MAX_GUARDRAIL_EVENTS);
-
-    snapshot
+fn decode_store_value<T: DeserializeOwned + Default>(
+    value: Option<serde_json::Value>,
+    key: &str,
+) -> Result<T, String> {
+    value
+        .map(|value| {
+            serde_json::from_value(value)
+                .map_err(|error| format!("Stored {key} data is malformed: {error}"))
+        })
+        .unwrap_or_else(|| Ok(T::default()))
 }
 
 fn load_snapshot(app: &AppHandle) -> Result<AppSnapshot, String> {
     let store = app.store("store.json").map_err(|e| e.to_string())?;
 
-    let schema_version = store
-        .get("schema_version")
-        .and_then(|v| v.as_u64())
-        .and_then(|v| u32::try_from(v).ok())
-        .unwrap_or(CURRENT_SCHEMA_VERSION);
+    let schema_version = match store.get("schema_version") {
+        None => CURRENT_SCHEMA_VERSION,
+        Some(value) => u32::try_from(
+            value
+                .as_u64()
+                .ok_or_else(|| "Stored schema version is malformed".to_string())?,
+        )
+        .map_err(|_| "Stored schema version is out of range".to_string())?,
+    };
 
-    Ok(sanitize_snapshot(AppSnapshot {
+    Ok(AppSnapshot {
+        format: "desktop-pet-backup".to_string(),
         schema_version,
         exported_at: chrono::Utc::now().to_rfc3339(),
-        pet: store
-            .get("pet")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        coins: store
-            .get("coins")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        tasks: store
-            .get("tasks")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        goals: store
-            .get("goals")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        sessions: store
-            .get("sessions")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        settings: store
-            .get("settings")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        timer_runtime: store
-            .get("timer_runtime")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        progress: store
-            .get("user_progress")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        summaries: store
-            .get("daily_summaries")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        customization_loadouts: store
-            .get("customization_loadouts")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        pet_events: store
-            .get("pet_events")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        pet_active_quest: store
-            .get("pet_active_quest")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-        focus_guardrail_events: store
-            .get("focus_guardrail_events")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default(),
-    }))
+        pet: decode_store_value(store.get("pet"), "pet")?,
+        coins: decode_store_value(store.get("coins"), "coins")?,
+        tasks: decode_store_value(store.get("tasks"), "tasks")?,
+        goals: decode_store_value(store.get("goals"), "goals")?,
+        sessions: decode_store_value(store.get("sessions"), "sessions")?,
+        settings: decode_store_value(store.get("settings"), "settings")?,
+        timer_runtime: decode_store_value(store.get("timer_runtime"), "timer_runtime")?,
+        progress: decode_store_value(store.get("user_progress"), "user_progress")?,
+        summaries: decode_store_value(store.get("daily_summaries"), "daily_summaries")?,
+        customization_loadouts: decode_store_value(
+            store.get("customization_loadouts"),
+            "customization_loadouts",
+        )?,
+        pet_events: decode_store_value(store.get("pet_events"), "pet_events")?,
+        pet_active_quest: decode_store_value(store.get("pet_active_quest"), "pet_active_quest")?,
+        focus_guardrail_events: decode_store_value(
+            store.get("focus_guardrail_events"),
+            "focus_guardrail_events",
+        )?,
+        achievement_state: decode_store_value(store.get("achievement_state"), "achievement_state")?,
+        quest_recent_focus: decode_store_value(
+            store.get("pet_recent_focus_progress"),
+            "pet_recent_focus_progress",
+        )?,
+        quest_recent_care: decode_store_value(
+            store.get("pet_recent_care_progress"),
+            "pet_recent_care_progress",
+        )?,
+        quest_last_kind: decode_store_value(
+            store.get("pet_last_quest_kind"),
+            "pet_last_quest_kind",
+        )?,
+        quest_last_roll_at: decode_store_value(
+            store.get("pet_last_quest_roll_at"),
+            "pet_last_quest_roll_at",
+        )?,
+        break_events: decode_store_value(store.get("break_events"), "break_events")?,
+    })
 }
 
 fn save_snapshot(app: &AppHandle, snapshot: AppSnapshot) -> Result<(), String> {
     let store = app.store("store.json").map_err(|e| e.to_string())?;
     let snapshot = sanitize_snapshot(snapshot);
 
-    // Persist only canonical keys and flush immediately for explicit import/reset flows.
+    // Persist all domain keys and flush immediately for explicit import/reset flows.
     store.clear();
     store.set("schema_version", json!(CURRENT_SCHEMA_VERSION));
     store.set("pet", json!(snapshot.pet));
@@ -143,8 +142,41 @@ fn save_snapshot(app: &AppHandle, snapshot: AppSnapshot) -> Result<(), String> {
         "focus_guardrail_events",
         json!(snapshot.focus_guardrail_events),
     );
+    store.set("achievement_state", json!(snapshot.achievement_state));
+    store.set(
+        "pet_recent_focus_progress",
+        json!(snapshot.quest_recent_focus),
+    );
+    store.set(
+        "pet_recent_care_progress",
+        json!(snapshot.quest_recent_care),
+    );
+    store.set("pet_last_quest_kind", json!(snapshot.quest_last_kind));
+    store.set("pet_last_quest_roll_at", json!(snapshot.quest_last_roll_at));
+    store.set("break_events", json!(snapshot.break_events));
     store.save().map_err(|e| e.to_string())?;
 
+    Ok(())
+}
+
+fn save_with_rollback<F>(
+    next: &AppSnapshot,
+    previous: &AppSnapshot,
+    mut persist: F,
+) -> Result<(), String>
+where
+    F: FnMut(&AppSnapshot) -> Result<(), String>,
+{
+    if let Err(error) = persist(next) {
+        return match persist(previous) {
+            Ok(()) => Err(format!(
+                "Import save failed; previous data restored: {error}"
+            )),
+            Err(rollback_error) => Err(format!(
+                "Import save failed: {error}; rollback also failed: {rollback_error}"
+            )),
+        };
+    }
     Ok(())
 }
 
@@ -170,8 +202,19 @@ pub fn import_app_snapshot(
     snapshot: AppSnapshot,
 ) -> Result<String, String> {
     let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
+    validate_snapshot(&snapshot)?;
+    let mut snapshot = snapshot;
+    if snapshot.schema_version == CURRENT_SCHEMA_VERSION - 1 {
+        if snapshot.pet.owned_accessories.is_empty() {
+            snapshot.pet.owned_accessories = snapshot.pet.accessories.clone();
+        }
+        snapshot.format = "desktop-pet-backup".to_string();
+    }
     let snapshot = sanitize_snapshot(snapshot);
-    save_snapshot(&app, snapshot.clone())?;
+    let previous = load_snapshot(&app)?;
+    save_with_rollback(&snapshot, &previous, |candidate| {
+        save_snapshot(&app, candidate.clone())
+    })?;
     emit_snapshot_refresh_events(&app, &snapshot);
     Ok("Import complete".to_string())
 }
@@ -210,85 +253,80 @@ pub fn get_app_diagnostics(app: AppHandle) -> Result<AppDiagnostics, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::sanitize_snapshot;
-    use crate::models::{AppSnapshot, Task, TimerRuntimeState};
+    use super::{sanitize_snapshot, save_with_rollback, validate_snapshot};
+    use crate::models::{AchievementState, AppSnapshot, Task, CURRENT_SCHEMA_VERSION};
 
     #[test]
-    fn sanitize_snapshot_trims_empty_tasks_and_caps_lengths() {
-        let mut snapshot = AppSnapshot::default();
-        snapshot.tasks = vec![
-            Task {
-                id: "1".to_string(),
-                title: " ".to_string(),
-                completed: false,
-                created_at: "2026-01-01T00:00:00Z".to_string(),
-            },
-            Task {
-                id: "2".to_string(),
-                title: "  Keep this task  ".to_string(),
-                completed: false,
-                created_at: "2026-01-01T00:00:00Z".to_string(),
-            },
-        ];
-
-        let sanitized = sanitize_snapshot(snapshot);
-        assert_eq!(sanitized.tasks.len(), 1);
-        assert_eq!(sanitized.tasks[0].title, "Keep this task");
-    }
-
-    #[test]
-    fn sanitize_snapshot_clamps_runtime() {
+    fn snapshot_round_trip_preserves_persisted_state_and_long_collections() {
         let snapshot = AppSnapshot {
-            timer_runtime: TimerRuntimeState {
-                phase: "work".to_string(),
-                seconds_left: 999_999,
-                total_seconds: 999_999,
-                paused: false,
-                session_id: Some("abc".to_string()),
-                sessions_completed: 1,
-                preset: "standard".to_string(),
-                last_updated_at: "2026-01-01T00:00:00Z".to_string(),
+            tasks: (0..2_100)
+                .map(|index| Task {
+                    id: index.to_string(),
+                    title: format!(" task {index} "),
+                    completed: false,
+                    reward_claimed: false,
+                    created_at: "2026-01-01T00:00:00Z".to_string(),
+                })
+                .collect(),
+            quest_recent_focus: 7,
+            achievement_state: AchievementState {
+                total_unlocked: 3,
+                ..AchievementState::default()
             },
             ..AppSnapshot::default()
         };
-
-        let sanitized = sanitize_snapshot(snapshot);
-        assert_eq!(sanitized.timer_runtime.total_seconds, 3 * 60 * 60);
-        assert_eq!(sanitized.timer_runtime.seconds_left, 3 * 60 * 60);
+        let serialized = serde_json::to_value(&snapshot).unwrap();
+        let restored: AppSnapshot = serde_json::from_value(serialized.clone()).unwrap();
+        assert_eq!(serde_json::to_value(restored).unwrap(), serialized);
+        assert_eq!(sanitize_snapshot(snapshot.clone()).tasks.len(), 2_100);
     }
 
     #[test]
-    fn sanitize_snapshot_normalizes_settings() {
-        let mut snapshot = AppSnapshot::default();
-        snapshot.settings.timer_preset = "very-long".to_string();
-        snapshot.settings.ui_theme = "neon".to_string();
-        snapshot.settings.pet_skin = "retro".to_string();
-        snapshot.settings.pet_scene = "moon".to_string();
-        snapshot.settings.sound_volume = f32::NAN;
-        snapshot.settings.focus_allowlist = vec![
-            "https://Docs.YouTube.com/watch?v=1".to_string(),
-            "docs.youtube.com".to_string(),
-            "bad host".to_string(),
-        ];
-        snapshot.settings.focus_blocklist = vec![
-            "Example.com".to_string(),
-            "https://example.com/path".to_string(),
-            "bad*host".to_string(),
-        ];
+    fn rejects_empty_malformed_and_future_schema_backups() {
+        assert!(serde_json::from_str::<AppSnapshot>("{}").is_err());
+        assert!(serde_json::from_str::<AppSnapshot>("not json").is_err());
+        let future = AppSnapshot {
+            schema_version: CURRENT_SCHEMA_VERSION + 1,
+            ..AppSnapshot::default()
+        };
+        assert!(validate_snapshot(&future).is_err());
+    }
 
-        let sanitized = sanitize_snapshot(snapshot);
-        assert_eq!(sanitized.settings.timer_preset, "standard");
-        assert_eq!(sanitized.settings.ui_theme, "sunrise");
-        assert_eq!(sanitized.settings.pet_skin, "classic");
-        assert_eq!(sanitized.settings.pet_scene, "meadow");
-        assert_eq!(sanitized.settings.sound_volume, 0.7);
-        assert_eq!(
-            sanitized.settings.focus_allowlist,
-            vec!["docs.youtube.com".to_string()]
-        );
-        assert_eq!(
-            sanitized.settings.focus_blocklist,
-            vec!["example.com".to_string()]
-        );
+    #[test]
+    fn validates_backup_identity_and_supported_schema() {
+        assert!(validate_snapshot(&AppSnapshot::default()).is_ok());
+        let snapshot = AppSnapshot {
+            exported_at: "invalid".to_string(),
+            ..AppSnapshot::default()
+        };
+        assert!(validate_snapshot(&snapshot).is_err());
+        let invalid_identity = AppSnapshot {
+            format: "another-app".to_string(),
+            ..AppSnapshot::default()
+        };
+        assert!(validate_snapshot(&invalid_identity).is_err());
+    }
+
+    #[test]
+    fn failed_snapshot_save_restores_previous_value() {
+        let previous = AppSnapshot::default();
+        let next = AppSnapshot {
+            pet: crate::models::PetState {
+                total_pomodoros: 10,
+                ..crate::models::PetState::default()
+            },
+            ..AppSnapshot::default()
+        };
+        let mut persisted = serde_json::to_value(&previous).unwrap();
+        let result = save_with_rollback(&next, &previous, |candidate| {
+            persisted = serde_json::to_value(candidate).unwrap();
+            if candidate.pet.total_pomodoros == 10 {
+                Err("simulated persistence failure".to_string())
+            } else {
+                Ok(())
+            }
+        });
+        assert!(result.is_err());
+        assert_eq!(persisted, serde_json::to_value(previous).unwrap());
     }
 }

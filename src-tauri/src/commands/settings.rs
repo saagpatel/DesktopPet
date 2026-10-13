@@ -27,7 +27,7 @@ const MIN_TYPING_THRESHOLD_CPM: u32 = 80;
 const MAX_TYPING_THRESHOLD_CPM: u32 = 420;
 
 fn is_allowed(value: &str, allowed: &[&str]) -> bool {
-    allowed.iter().any(|candidate| *candidate == value)
+    allowed.contains(&value)
 }
 
 fn normalize_host_pattern(value: &str) -> Option<String> {
@@ -138,7 +138,10 @@ fn normalize_notification_whitelist(input: Vec<String>) -> Vec<String> {
     }
 
     if output.is_empty() {
-        vec!["session_complete".to_string(), "guardrail_alert".to_string()]
+        vec![
+            "session_complete".to_string(),
+            "guardrail_alert".to_string(),
+        ]
     } else {
         output
     }

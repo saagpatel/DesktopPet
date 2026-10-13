@@ -54,7 +54,7 @@ fn normalize_evolution_thresholds(input: Option<Vec<u32>>) -> Vec<u32> {
         values = vec![0, 5, 15];
     }
     let stage1 = values[1].max(1);
-    let stage2 = values[2].max(stage1 + 1);
+    let stage2 = values[2].max(stage1.saturating_add(1));
     vec![0, stage1, stage2]
 }
 
@@ -76,7 +76,7 @@ fn stage_for_total_pomodoros(total_pomodoros: u32, thresholds: &[u32]) -> u32 {
     }
 }
 
-fn clamp_metric(value: i32) -> u32 {
+fn clamp_metric(value: i64) -> u32 {
     value.clamp(0, 100) as u32
 }
 
@@ -94,10 +94,11 @@ fn apply_care_decay(mut pet: PetState) -> PetState {
         return pet;
     }
 
-    pet.energy = clamp_metric(pet.energy as i32 - elapsed_hours * 2);
-    pet.hunger = clamp_metric(pet.hunger as i32 + elapsed_hours * 3);
-    pet.cleanliness = clamp_metric(pet.cleanliness as i32 - elapsed_hours);
-    pet.affection = clamp_metric(pet.affection as i32 - elapsed_hours / 2);
+    let elapsed_hours = i64::from(elapsed_hours);
+    pet.energy = clamp_metric(pet.energy as i64 - elapsed_hours * 2);
+    pet.hunger = clamp_metric(pet.hunger as i64 + elapsed_hours * 3);
+    pet.cleanliness = clamp_metric(pet.cleanliness as i64 - elapsed_hours);
+    pet.affection = clamp_metric(pet.affection as i64 - elapsed_hours / 2);
     pet.last_care_update_at = chrono::Utc::now().to_rfc3339();
 
     pet.mood = if pet.energy < 25 {
@@ -117,10 +118,11 @@ fn apply_care_decay(mut pet: PetState) -> PetState {
 
 fn load_pet(app: &AppHandle) -> Result<PetState, String> {
     let store = app.store("store.json").map_err(|e| e.to_string())?;
-    let pet: PetState = store
-        .get("pet")
-        .and_then(|v| serde_json::from_value(v).ok())
-        .unwrap_or_default();
+    let pet: PetState = match store.get("pet") {
+        None => PetState::default(),
+        Some(value) => serde_json::from_value(value)
+            .map_err(|error| format!("Stored pet data is malformed: {error}"))?,
+    };
     Ok(apply_care_decay(pet))
 }
 
@@ -306,9 +308,8 @@ fn select_quest_template_for_pet(
     recent_focus: u32,
     recent_care: u32,
 ) -> QuestTemplate {
-    let offset =
-        (pet.total_pomodoros + pet.current_stage + recent_focus + recent_care) as usize
-            % QUEST_TEMPLATES.len();
+    let offset = (pet.total_pomodoros + pet.current_stage + recent_focus + recent_care) as usize
+        % QUEST_TEMPLATES.len();
     let mut ranked = Vec::with_capacity(QUEST_TEMPLATES.len());
     for step in 0..QUEST_TEMPLATES.len() {
         let candidate = QUEST_TEMPLATES[(offset + step) % QUEST_TEMPLATES.len()];
@@ -317,11 +318,13 @@ fn select_quest_template_for_pet(
             quest_total_score(candidate, pet, last_quest_kind, recent_focus, recent_care),
         ));
     }
-    ranked.sort_by(|(left_template, left_score), (right_template, right_score)| {
-        right_score
-            .cmp(left_score)
-            .then_with(|| left_template.kind.cmp(right_template.kind))
-    });
+    ranked.sort_by(
+        |(left_template, left_score), (right_template, right_score)| {
+            right_score
+                .cmp(left_score)
+                .then_with(|| left_template.kind.cmp(right_template.kind))
+        },
+    );
     if let Some(last_kind) = last_quest_kind {
         if let Some((template, score)) = ranked.first().copied() {
             if template.kind == last_kind {
@@ -338,7 +341,10 @@ fn select_quest_template_for_pet(
             return template;
         }
     }
-    ranked.first().map(|(template, _)| *template).unwrap_or(QUEST_TEMPLATES[0])
+    ranked
+        .first()
+        .map(|(template, _)| *template)
+        .unwrap_or(QUEST_TEMPLATES[0])
 }
 
 fn load_recent_quest_progress(app: &AppHandle) -> Result<(u32, u32), String> {
@@ -410,7 +416,9 @@ fn save_last_quest_kind(app: &AppHandle, quest_kind: &str) -> Result<(), String>
     Ok(())
 }
 
-fn load_last_quest_roll_at(app: &AppHandle) -> Result<Option<chrono::DateTime<chrono::Utc>>, String> {
+fn load_last_quest_roll_at(
+    app: &AppHandle,
+) -> Result<Option<chrono::DateTime<chrono::Utc>>, String> {
     let store = app.store("store.json").map_err(|e| e.to_string())?;
     let raw: Option<String> = store
         .get(QUEST_LAST_ROLL_KEY)
@@ -542,35 +550,35 @@ pub fn pet_interact(
 
     match action.as_str() {
         "pet" => {
-            pet.affection = clamp_metric(pet.affection as i32 + 8);
-            pet.energy = clamp_metric(pet.energy as i32 - 1);
+            pet.affection = clamp_metric(pet.affection as i64 + 8);
+            pet.energy = clamp_metric(pet.energy as i64 - 1);
             pet.animation_state = "clicked".to_string();
         }
         "feed" => {
-            pet.hunger = clamp_metric(pet.hunger as i32 - 25);
-            pet.affection = clamp_metric(pet.affection as i32 + 4);
+            pet.hunger = clamp_metric(pet.hunger as i64 - 25);
+            pet.affection = clamp_metric(pet.affection as i64 + 4);
             pet.animation_state = "celebrating".to_string();
         }
         "play" => {
-            pet.affection = clamp_metric(pet.affection as i32 + 10);
-            pet.energy = clamp_metric(pet.energy as i32 - 8);
-            pet.cleanliness = clamp_metric(pet.cleanliness as i32 - 4);
+            pet.affection = clamp_metric(pet.affection as i64 + 10);
+            pet.energy = clamp_metric(pet.energy as i64 - 8);
+            pet.cleanliness = clamp_metric(pet.cleanliness as i64 - 4);
             pet.animation_state = "celebrating".to_string();
         }
         "nap" => {
-            pet.energy = clamp_metric(pet.energy as i32 + 20);
-            pet.hunger = clamp_metric(pet.hunger as i32 + 8);
+            pet.energy = clamp_metric(pet.energy as i64 + 20);
+            pet.hunger = clamp_metric(pet.hunger as i64 + 8);
             pet.animation_state = "break".to_string();
         }
         "clean" => {
-            pet.cleanliness = clamp_metric(pet.cleanliness as i32 + 22);
-            pet.affection = clamp_metric(pet.affection as i32 + 3);
+            pet.cleanliness = clamp_metric(pet.cleanliness as i64 + 22);
+            pet.affection = clamp_metric(pet.affection as i64 + 3);
             pet.animation_state = "idle".to_string();
         }
         "train" => {
-            pet.energy = clamp_metric(pet.energy as i32 - 12);
-            pet.hunger = clamp_metric(pet.hunger as i32 + 12);
-            pet.affection = clamp_metric(pet.affection as i32 + 6);
+            pet.energy = clamp_metric(pet.energy as i64 - 12);
+            pet.hunger = clamp_metric(pet.hunger as i64 + 12);
+            pet.affection = clamp_metric(pet.affection as i64 + 6);
             pet.animation_state = "working".to_string();
         }
         _ => return Err("Unknown pet interaction".to_string()),
@@ -711,13 +719,13 @@ fn progress_active_quest(
         .get("coins")
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
-    coins.total += quest.reward_coins;
+    coins.total = coins.total.saturating_add(quest.reward_coins);
     store.set("coins", json!(coins));
     let _ = app.emit(EVENT_COINS_CHANGED, &coins);
 
     let mut pet = load_pet(app)?;
-    pet.affection = clamp_metric(pet.affection as i32 + 12);
-    pet.energy = clamp_metric(pet.energy as i32 + 4);
+    pet.affection = clamp_metric(pet.affection as i64 + 12);
+    pet.energy = clamp_metric(pet.energy as i64 + 4);
     pet.mood = "proud".to_string();
     pet.animation_state = "celebrating".to_string();
     pet.last_interaction = Some("quest_complete".to_string());
@@ -828,9 +836,11 @@ pub fn roll_pet_event(
     };
 
     let mut events = load_events(&app)?;
-    let duplicate_unresolved = events
-        .iter()
-        .any(|existing| !existing.resolved && existing.kind == event.kind && existing.description == event.description);
+    let duplicate_unresolved = events.iter().any(|existing| {
+        !existing.resolved
+            && existing.kind == event.kind
+            && existing.description == event.description
+    });
     if !duplicate_unresolved {
         events.push(event.clone());
         let _ = save_bounded_events(&app, events)?;
@@ -842,9 +852,9 @@ pub fn roll_pet_event(
 mod tests {
     use super::{
         apply_quest_progress, cooldown_remaining_secs, create_quest_for_pet,
-        select_quest_template_for_pet,
         normalize_evolution_thresholds, normalize_species_id, quest_reward_for_stage,
-        quest_target_for_stage, validate_variant, QuestProgressKind, ALLOWED_ANIMATIONS,
+        quest_target_for_stage, select_quest_template_for_pet, validate_variant, QuestProgressKind,
+        ALLOWED_ANIMATIONS,
     };
     use crate::models::{PetQuest, PetState};
 
@@ -878,8 +888,14 @@ mod tests {
 
     #[test]
     fn normalize_evolution_thresholds_repairs_invalid_input() {
-        assert_eq!(normalize_evolution_thresholds(Some(vec![0, 0, 0])), vec![0, 1, 2]);
-        assert_eq!(normalize_evolution_thresholds(Some(vec![0, 8, 4])), vec![0, 8, 9]);
+        assert_eq!(
+            normalize_evolution_thresholds(Some(vec![0, 0, 0])),
+            vec![0, 1, 2]
+        );
+        assert_eq!(
+            normalize_evolution_thresholds(Some(vec![0, 8, 4])),
+            vec![0, 8, 9]
+        );
     }
 
     #[test]
@@ -948,26 +964,31 @@ mod tests {
 
     #[test]
     fn create_quest_for_pet_avoids_recent_kind_when_possible() {
-        let mut pet = PetState::default();
-        pet.total_pomodoros = 4;
+        let pet = PetState {
+            total_pomodoros: 4,
+            ..PetState::default()
+        };
         let quest = create_quest_for_pet(&pet, Some("focus_sessions"), 2, 1);
         assert_ne!(quest.kind, "focus_sessions");
     }
 
     #[test]
     fn quest_selection_prefers_care_when_recent_focus_is_high() {
-        let mut pet = PetState::default();
-        pet.current_stage = 2;
-        let template =
-            select_quest_template_for_pet(&pet, Some("focus_sessions"), 6, 1);
+        let pet = PetState {
+            current_stage: 2,
+            ..PetState::default()
+        };
+        let template = select_quest_template_for_pet(&pet, Some("focus_sessions"), 6, 1);
         assert!(template.kind == "care_actions" || template.kind == "mindful_reset");
     }
 
     #[test]
     fn quest_selection_accounts_for_accessory_bias() {
-        let mut pet = PetState::default();
-        pet.current_stage = 2;
-        pet.accessories = vec!["apple".to_string(), "cookie".to_string()];
+        let pet = PetState {
+            current_stage: 2,
+            accessories: vec!["apple".to_string(), "cookie".to_string()],
+            ..PetState::default()
+        };
         let quest = create_quest_for_pet(&pet, None, 1, 1);
         assert!(quest.kind == "care_actions" || quest.kind == "mindful_reset");
     }

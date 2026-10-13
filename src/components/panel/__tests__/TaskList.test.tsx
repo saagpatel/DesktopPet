@@ -5,8 +5,18 @@ import { TaskList } from "../TaskList";
 import type { Task } from "../../../store/types";
 
 const mockTasks: Task[] = [
-  { id: "1", title: "Write tests", completed: false, createdAt: "2025-01-01T00:00:00Z" },
-  { id: "2", title: "Fix bug", completed: true, createdAt: "2025-01-01T01:00:00Z" },
+  {
+    id: "1",
+    title: "Write tests",
+    completed: false,
+    createdAt: "2025-01-01T00:00:00Z",
+  },
+  {
+    id: "2",
+    title: "Fix bug",
+    completed: true,
+    createdAt: "2025-01-01T01:00:00Z",
+  },
 ];
 
 const defaultProps = {
@@ -62,7 +72,9 @@ describe("TaskList", () => {
     const user = userEvent.setup();
     render(<TaskList {...defaultProps} />);
 
-    const input = screen.getByPlaceholderText("Add a task...") as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      "Add a task...",
+    ) as HTMLInputElement;
     await user.type(input, "New task");
     await user.click(screen.getByRole("button", { name: "Add" }));
 

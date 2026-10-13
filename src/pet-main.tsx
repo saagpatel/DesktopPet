@@ -10,5 +10,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <PetOverlay />
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

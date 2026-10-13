@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-03-22
 
 ### Added
+
 - Initial Desktop Pet / Pomodoro Buddy
 - Streamlined UI with penguin icon and minimal floating pet
 - Deepen pet interactions, customization, and guardrails
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-signing handoff documentation
 
 ### Fixed
+
 - Honor DesktopPEt gitleaks skip flag
 - Stabilize overlay recovery and app flows
 - Increase pet window size to fit all evolution stages
@@ -38,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Normalize import settings and preserve loadout FIFO
 
 ### Changed
+
 - Harden verification and packaging for release
 - Complete audit hardening and ops tooling
 - Cover backup and diagnostics settings flows

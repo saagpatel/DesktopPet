@@ -9,6 +9,26 @@ fn today() -> String {
     chrono::Utc::now().format("%Y-%m-%d").to_string()
 }
 
+fn breaks_for_date(events: &[String], date: &str) -> u32 {
+    events
+        .iter()
+        .filter(|timestamp| {
+            chrono::DateTime::parse_from_rfc3339(timestamp)
+                .ok()
+                .map(|value| {
+                    value
+                        .with_timezone(&chrono::Utc)
+                        .format("%Y-%m-%d")
+                        .to_string()
+                        == date
+                })
+                .unwrap_or(false)
+        })
+        .count()
+        .try_into()
+        .unwrap_or(u32::MAX)
+}
+
 fn default_goals(date: &str) -> Vec<DailyGoal> {
     vec![
         DailyGoal {
@@ -50,17 +70,43 @@ fn load_goals(app: &AppHandle) -> Result<Vec<DailyGoal>, String> {
         .unwrap_or_default();
 
     let date = today();
-    let has_current_date = !goals.is_empty() && goals.iter().all(|goal| goal.date == date);
-    if !has_current_date {
-        let new_goals = default_goals(&date);
-        store.set("goals", json!(new_goals));
-        Ok(store
-            .get("goals")
-            .and_then(|v| serde_json::from_value(v).ok())
-            .unwrap_or_default())
+    let mut current_goals = if !goals.is_empty() && goals.iter().all(|goal| goal.date == date) {
+        goals
     } else {
-        Ok(goals)
+        default_goals(&date)
+    };
+    let breaks: Vec<String> = store
+        .get("break_events")
+        .and_then(|value| serde_json::from_value(value).ok())
+        .unwrap_or_default();
+    if let Some(goal) = current_goals.iter_mut().find(|goal| goal.id == "breaks") {
+        goal.progress = breaks_for_date(&breaks, &date).min(goal.target);
     }
+    store.set("goals", json!(current_goals));
+    Ok(current_goals)
+}
+
+#[tauri::command]
+pub fn record_break_completion(
+    app: AppHandle,
+    store_lock: tauri::State<'_, crate::StoreLock>,
+) -> Result<Vec<DailyGoal>, String> {
+    let _guard = store_lock
+        .0
+        .lock()
+        .map_err(|error| format!("Could not lock app state: {error}"))?;
+    let store = app
+        .store("store.json")
+        .map_err(|error| format!("Could not open app state: {error}"))?;
+    let mut events: Vec<String> = store
+        .get("break_events")
+        .and_then(|value| serde_json::from_value(value).ok())
+        .unwrap_or_default();
+    events.push(chrono::Utc::now().to_rfc3339());
+    store.set("break_events", json!(events));
+    let goals = load_goals(&app)?;
+    let _ = app.emit(EVENT_GOALS_CHANGED, &goals);
+    Ok(goals)
 }
 
 #[tauri::command]
@@ -99,7 +145,8 @@ fn save_goal_progress_delta(app: &AppHandle, goal_id: &str, delta: u32) -> Resul
     let _ = app.emit(EVENT_GOALS_CHANGED, &goals);
 
     if newly_completed {
-        let _ = crate::progression::record_goal_completion(app);
+        crate::progression::record_goal_completion(app)
+            .map_err(|error| format!("Goal completed, but progression reward failed: {error}"))?;
     }
 
     Ok(())
@@ -126,7 +173,8 @@ pub fn update_goal_progress(
     store.set("goals", json!(goals));
     let _ = app.emit(EVENT_GOALS_CHANGED, &goals);
     if newly_completed {
-        let _ = crate::progression::record_goal_completion(&app);
+        crate::progression::record_goal_completion(&app)
+            .map_err(|error| format!("Goal completed, but progression reward failed: {error}"))?;
     }
     Ok(goals)
 }
@@ -134,6 +182,18 @@ pub fn update_goal_progress(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn daily_break_count_uses_event_dates() {
+        let events = vec![
+            "2026-10-11T23:59:00Z".to_string(),
+            "2026-10-12T00:01:00Z".to_string(),
+            "not-a-date".to_string(),
+        ];
+        assert_eq!(breaks_for_date(&events, "2026-10-12"), 1);
+        assert_eq!(breaks_for_date(&events, "2026-10-11"), 1);
+        assert_eq!(breaks_for_date(&events, "2026-10-13"), 0);
+    }
 
     #[test]
     fn default_goals_have_correct_count() {

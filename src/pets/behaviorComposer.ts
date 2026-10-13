@@ -26,7 +26,11 @@ export interface PetBehaviorComposition {
     | "species-intensity-subtle"
     | "species-intensity-standard"
     | "species-intensity-lively";
-  postureClass: "" | "species-posture-settle" | "species-posture-hover" | "species-posture-curl";
+  postureClass:
+    | ""
+    | "species-posture-settle"
+    | "species-posture-hover"
+    | "species-posture-curl";
   accessoryClasses: string;
   interactionCooldownMs: number;
 }
@@ -74,7 +78,7 @@ function buildAccessoryClasses(
   accessories: ShopItemId[],
   shouldChill: boolean,
   motionLevel: 0 | 1 | 2 | 3,
-  lastInteraction: string | null
+  lastInteraction: string | null,
 ) {
   const classes = new Set<string>();
   let questAccent: string | null = null;
@@ -104,20 +108,26 @@ function buildAccessoryClasses(
   return Array.from(classes).join(" ");
 }
 
-export function composePetBehavior(input: ComposePetBehaviorInput): PetBehaviorComposition {
+export function composePetBehavior(
+  input: ComposePetBehaviorInput,
+): PetBehaviorComposition {
   const hardChill = input.focusModeEnabled || input.contextChilled;
   const shouldChill = input.quietModeEnabled || hardChill;
 
   let motionLevel = baselineMotionLevel(input.species);
   for (const accessory of input.accessories) {
-    motionLevel = clampMotionLevel(motionLevel + ACCESSORY_BEHAVIOR_PROFILES[accessory].motionBoost);
+    motionLevel = clampMotionLevel(
+      motionLevel + ACCESSORY_BEHAVIOR_PROFILES[accessory].motionBoost,
+    );
   }
 
   // Precedence order: species baseline -> accessory modifiers -> chill clamp -> budget clamp.
   if (shouldChill) {
     motionLevel = clampMotionLevel(Math.min(motionLevel, 1));
   }
-  motionLevel = clampMotionLevel(Math.min(motionLevel, BUDGET_MOTION_CAP[input.animationBudget]));
+  motionLevel = clampMotionLevel(
+    Math.min(motionLevel, BUDGET_MOTION_CAP[input.animationBudget]),
+  );
 
   const animationState =
     hardChill && !shouldPreserveAnimationState(input.animationState)
@@ -129,7 +139,12 @@ export function composePetBehavior(input: ComposePetBehaviorInput): PetBehaviorC
     : input.species.behaviorProfile.interactionCadenceMs[0];
   const interactionCooldownMs = Math.max(
     250,
-    Math.min(6000, Math.round(cadenceBase * BUDGET_COOLDOWN_MULTIPLIER[input.animationBudget]))
+    Math.min(
+      6000,
+      Math.round(
+        cadenceBase * BUDGET_COOLDOWN_MULTIPLIER[input.animationBudget],
+      ),
+    ),
   );
 
   const speciesIntensityClass =
@@ -161,7 +176,7 @@ export function composePetBehavior(input: ComposePetBehaviorInput): PetBehaviorC
       input.accessories,
       shouldChill,
       motionLevel,
-      input.lastInteraction
+      input.lastInteraction,
     ),
     interactionCooldownMs,
   };

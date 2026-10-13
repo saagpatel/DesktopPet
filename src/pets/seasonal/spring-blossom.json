@@ -4,7 +4,19 @@
   "description": "Soft pastel palette and cozy meadow vibes.",
   "activeMonths": [3, 4, 5],
   "bundles": [
-    { "name": "Petal Morning", "uiTheme": "sunrise", "petSkin": "plush", "petScene": "meadow", "speciesId": "cat" },
-    { "name": "Garden Drift", "uiTheme": "mint", "petSkin": "classic", "petScene": "forest", "speciesId": "axolotl" }
+    {
+      "name": "Petal Morning",
+      "uiTheme": "sunrise",
+      "petSkin": "plush",
+      "petScene": "meadow",
+      "speciesId": "cat"
+    },
+    {
+      "name": "Garden Drift",
+      "uiTheme": "mint",
+      "petSkin": "classic",
+      "petScene": "forest",
+      "speciesId": "axolotl"
+    }
   ]
 }

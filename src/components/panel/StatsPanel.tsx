@@ -6,7 +6,10 @@ interface Props {
 }
 
 export function StatsPanel({ progress, summaries }: Props) {
-  const totalGuardrails = summaries.reduce((acc, item) => acc + item.guardrailsInterventions, 0);
+  const totalGuardrails = summaries.reduce(
+    (acc, item) => acc + item.guardrailsInterventions,
+    0,
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -21,11 +24,16 @@ export function StatsPanel({ progress, summaries }: Props) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Recent activity
         </h3>
         {summaries.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted-color)" }}>No activity yet.</p>
+          <p className="text-sm" style={{ color: "var(--muted-color)" }}>
+            No activity yet.
+          </p>
         ) : (
           <div className="flex flex-col gap-2">
             {summaries.map((summary) => (
@@ -39,7 +47,10 @@ export function StatsPanel({ progress, summaries }: Props) {
                 }}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium" style={{ color: "var(--text-color)" }}>
+                  <span
+                    className="font-medium"
+                    style={{ color: "var(--text-color)" }}
+                  >
                     {summary.date}
                   </span>
                   <span>+{summary.xpEarned} XP</span>
@@ -65,10 +76,20 @@ function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="p-3 rounded-lg border"
-      style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}
+      style={{
+        backgroundColor: "var(--card-bg)",
+        borderColor: "var(--border-color)",
+      }}
     >
-      <div className="text-xs" style={{ color: "var(--muted-color)" }}>{label}</div>
-      <div className="text-sm font-semibold" style={{ color: "var(--text-color)" }}>{value}</div>
+      <div className="text-xs" style={{ color: "var(--muted-color)" }}>
+        {label}
+      </div>
+      <div
+        className="text-sm font-semibold"
+        style={{ color: "var(--text-color)" }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

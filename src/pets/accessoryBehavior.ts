@@ -10,7 +10,10 @@ export interface AccessoryBehaviorProfile {
   shopHint: string;
 }
 
-export const ACCESSORY_BEHAVIOR_PROFILES: Record<ShopItemId, AccessoryBehaviorProfile> = {
+export const ACCESSORY_BEHAVIOR_PROFILES: Record<
+  ShopItemId,
+  AccessoryBehaviorProfile
+> = {
   party_hat: {
     id: "party_hat",
     behaviorClass: "behavior-partyhat",

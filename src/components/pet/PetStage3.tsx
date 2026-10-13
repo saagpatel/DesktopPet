@@ -8,19 +8,49 @@ export function PetStage3({ accessories }: Props) {
   return (
     <svg width="350" height="350" viewBox="0 0 350 350" fill="none">
       {/* Wings */}
-      <path d="M 50 160 Q 20 120 40 80 Q 60 100 70 150" fill="#3A7CA5" opacity="0.7" />
-      <path d="M 300 160 Q 330 120 310 80 Q 290 100 280 150" fill="#3A7CA5" opacity="0.7" />
-      <path d="M 55 175 Q 15 140 30 95 Q 55 115 65 165" fill="#2E6B8A" opacity="0.5" />
-      <path d="M 295 175 Q 335 140 320 95 Q 295 115 285 165" fill="#2E6B8A" opacity="0.5" />
+      <path
+        d="M 50 160 Q 20 120 40 80 Q 60 100 70 150"
+        fill="#3A7CA5"
+        opacity="0.7"
+      />
+      <path
+        d="M 300 160 Q 330 120 310 80 Q 290 100 280 150"
+        fill="#3A7CA5"
+        opacity="0.7"
+      />
+      <path
+        d="M 55 175 Q 15 140 30 95 Q 55 115 65 165"
+        fill="#2E6B8A"
+        opacity="0.5"
+      />
+      <path
+        d="M 295 175 Q 335 140 320 95 Q 295 115 285 165"
+        fill="#2E6B8A"
+        opacity="0.5"
+      />
 
       {/* Body — angular/armored */}
-      <path d="M 110 120 L 175 100 L 240 120 L 250 200 L 175 230 L 100 200 Z" fill="#2A6F97" />
+      <path
+        d="M 110 120 L 175 100 L 240 120 L 250 200 L 175 230 L 100 200 Z"
+        fill="#2A6F97"
+      />
       {/* Armor plates */}
-      <path d="M 130 135 L 175 120 L 220 135 L 215 185 L 175 200 L 135 185 Z" fill="#3D8AB9" opacity="0.7" />
-      <path d="M 150 150 L 175 140 L 200 150 L 195 175 L 175 182 L 155 175 Z" fill="#5BA8C8" opacity="0.5" />
+      <path
+        d="M 130 135 L 175 120 L 220 135 L 215 185 L 175 200 L 135 185 Z"
+        fill="#3D8AB9"
+        opacity="0.7"
+      />
+      <path
+        d="M 150 150 L 175 140 L 200 150 L 195 175 L 175 182 L 155 175 Z"
+        fill="#5BA8C8"
+        opacity="0.5"
+      />
 
       {/* Head — more angular */}
-      <path d="M 125 60 L 175 40 L 225 60 L 220 110 L 175 120 L 130 110 Z" fill="#327BA8" />
+      <path
+        d="M 125 60 L 175 40 L 225 60 L 220 110 L 175 120 L 130 110 Z"
+        fill="#327BA8"
+      />
 
       {/* Crown spikes */}
       <polygon points="140,60 145,30 155,55" fill="#FFD93D" />
@@ -36,7 +66,13 @@ export function PetStage3({ accessories }: Props) {
       <circle cx="195" cy="76" r="1.5" fill="white" />
 
       {/* Mouth — determined */}
-      <path d="M 160 96 L 175 102 L 190 96" stroke="#1A1A2E" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path
+        d="M 160 96 L 175 102 L 190 96"
+        stroke="#1A1A2E"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+      />
 
       {/* Arms — strong */}
       <path d="M 95 150 Q 60 145 55 170 Q 60 185 95 180" fill="#2A6F97" />
@@ -53,7 +89,12 @@ export function PetStage3({ accessories }: Props) {
       <ellipse cx="215" cy="265" rx="20" ry="10" fill="#163D57" />
 
       {/* Tail */}
-      <path d="M 175 230 Q 140 260 120 290 Q 115 300 125 295 Q 145 275 175 240" fill="#2A6F97" stroke="#1E5276" strokeWidth="1" />
+      <path
+        d="M 175 230 Q 140 260 120 290 Q 115 300 125 295 Q 145 275 175 240"
+        fill="#2A6F97"
+        stroke="#1E5276"
+        strokeWidth="1"
+      />
 
       {/* Accessories */}
       {accessories.includes("party_hat") && (
@@ -70,19 +111,50 @@ export function PetStage3({ accessories }: Props) {
       )}
       {accessories.includes("sunglasses") && (
         <g>
-          <rect x="140" y="71" width="30" height="14" rx="3" fill="#1A1A2E" opacity="0.9" />
-          <rect x="180" y="71" width="30" height="14" rx="3" fill="#1A1A2E" opacity="0.9" />
-          <line x1="170" y1="78" x2="180" y2="78" stroke="#1A1A2E" strokeWidth="3" />
+          <rect
+            x="140"
+            y="71"
+            width="30"
+            height="14"
+            rx="3"
+            fill="#1A1A2E"
+            opacity="0.9"
+          />
+          <rect
+            x="180"
+            y="71"
+            width="30"
+            height="14"
+            rx="3"
+            fill="#1A1A2E"
+            opacity="0.9"
+          />
+          <line
+            x1="170"
+            y1="78"
+            x2="180"
+            y2="78"
+            stroke="#1A1A2E"
+            strokeWidth="3"
+          />
         </g>
       )}
       {accessories.includes("scarf") && (
-        <path d="M 100 115 Q 175 140 250 115 Q 245 130 175 135 Q 105 130 100 115" fill="#E74C3C" />
+        <path
+          d="M 100 115 Q 175 140 250 115 Q 245 130 175 135 Q 105 130 100 115"
+          fill="#E74C3C"
+        />
       )}
       {accessories.includes("apple") && (
         <g>
           <circle cx="42" cy="168" r="12" fill="#E74C3C" />
           <ellipse cx="42" cy="168" rx="12" ry="11" fill="#FF6B6B" />
-          <path d="M 42 156 Q 47 148 52 153" stroke="#4A7C3F" strokeWidth="2" fill="none" />
+          <path
+            d="M 42 156 Q 47 148 52 153"
+            stroke="#4A7C3F"
+            strokeWidth="2"
+            fill="none"
+          />
         </g>
       )}
       {accessories.includes("cookie") && (

@@ -136,7 +136,7 @@ pub fn initialize_achievements() -> Vec<Achievement> {
             id: "pet_evolved".to_string(),
             category: "pet".to_string(),
             title: "Growing Up".to_string(),
-            description: "Evolve your pet to stage 2".to_string(),
+            description: "Evolve your pet to evolution stage 2".to_string(),
             icon: "🌱".to_string(),
             unlocked_at: None,
             progress: 0,
@@ -147,7 +147,7 @@ pub fn initialize_achievements() -> Vec<Achievement> {
             id: "pet_mastery".to_string(),
             category: "pet".to_string(),
             title: "Pet Master".to_string(),
-            description: "Evolve your pet to stage 3".to_string(),
+            description: "Evolve your pet to evolution stage 3".to_string(),
             icon: "🌳".to_string(),
             unlocked_at: None,
             progress: 0,
@@ -192,11 +192,14 @@ pub fn initialize_achievements() -> Vec<Achievement> {
             id: "collector".to_string(),
             category: "progression".to_string(),
             title: "Collector".to_string(),
-            description: "Own 10 accessories".to_string(),
+            description: format!(
+                "Collect all {} accessories",
+                crate::commands::shop::accessory_count()
+            ),
             icon: "🎨".to_string(),
             unlocked_at: None,
             progress: 0,
-            target: 10,
+            target: crate::commands::shop::accessory_count(),
             hidden: false,
         },
         // Special Achievements
@@ -238,33 +241,78 @@ pub fn initialize_achievements() -> Vec<Achievement> {
 
 /// Check and update achievement progress based on user progress
 pub fn check_progress_achievements(
-    achievements: &mut Vec<Achievement>,
+    achievements: &mut [Achievement],
     progress: &UserProgress,
 ) -> Vec<String> {
     let mut newly_unlocked = Vec::new();
 
     // Focus session achievements
-    check_and_unlock(achievements, "first_session", progress.total_sessions, &mut newly_unlocked);
-    check_and_unlock(achievements, "focused_5", progress.total_sessions, &mut newly_unlocked);
-    check_and_unlock(achievements, "focused_25", progress.total_sessions, &mut newly_unlocked);
-    check_and_unlock(achievements, "focused_100", progress.total_sessions, &mut newly_unlocked);
+    check_and_unlock(
+        achievements,
+        "first_session",
+        progress.total_sessions,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "focused_5",
+        progress.total_sessions,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "focused_25",
+        progress.total_sessions,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "focused_100",
+        progress.total_sessions,
+        &mut newly_unlocked,
+    );
 
     // Streak achievements
-    check_and_unlock(achievements, "streak_3", progress.streak_days, &mut newly_unlocked);
-    check_and_unlock(achievements, "streak_7", progress.streak_days, &mut newly_unlocked);
-    check_and_unlock(achievements, "streak_30", progress.streak_days, &mut newly_unlocked);
-    check_and_unlock(achievements, "dedication", progress.streak_days, &mut newly_unlocked);
+    check_and_unlock(
+        achievements,
+        "streak_3",
+        progress.streak_days,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "streak_7",
+        progress.streak_days,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "streak_30",
+        progress.streak_days,
+        &mut newly_unlocked,
+    );
+    check_and_unlock(
+        achievements,
+        "dedication",
+        progress.streak_days,
+        &mut newly_unlocked,
+    );
 
     // Progression achievements
     check_and_unlock(achievements, "level_5", progress.level, &mut newly_unlocked);
-    check_and_unlock(achievements, "level_10", progress.level, &mut newly_unlocked);
+    check_and_unlock(
+        achievements,
+        "level_10",
+        progress.level,
+        &mut newly_unlocked,
+    );
 
     newly_unlocked
 }
 
 /// Check and update pet-related achievements
 pub fn check_pet_achievements(
-    achievements: &mut Vec<Achievement>,
+    achievements: &mut [Achievement],
     pet: &PetState,
     total_coins: u32,
 ) -> Vec<String> {
@@ -276,10 +324,10 @@ pub fn check_pet_achievements(
     }
 
     // Pet evolution achievements
-    if pet.current_stage >= 2 {
+    if pet.current_stage >= 1 {
         check_and_unlock(achievements, "pet_evolved", 1, &mut newly_unlocked);
     }
-    if pet.current_stage >= 3 {
+    if pet.current_stage >= 2 {
         check_and_unlock(achievements, "pet_mastery", 1, &mut newly_unlocked);
     }
 
@@ -292,20 +340,30 @@ pub fn check_pet_achievements(
     check_and_unlock(achievements, "wealthy", total_coins, &mut newly_unlocked);
 
     // Collector achievement
-    check_and_unlock(achievements, "collector", pet.accessories.len() as u32, &mut newly_unlocked);
+    check_and_unlock(
+        achievements,
+        "collector",
+        pet.owned_accessories.len() as u32,
+        &mut newly_unlocked,
+    );
 
     newly_unlocked
 }
 
 /// Check daily summary for special achievements
 pub fn check_daily_achievements(
-    achievements: &mut Vec<Achievement>,
+    achievements: &mut [Achievement],
     summary: &DailySummary,
 ) -> Vec<String> {
     let mut newly_unlocked = Vec::new();
 
     // Marathon achievement
-    check_and_unlock(achievements, "marathon", summary.sessions_completed, &mut newly_unlocked);
+    check_and_unlock(
+        achievements,
+        "marathon",
+        summary.sessions_completed,
+        &mut newly_unlocked,
+    );
 
     // Perfectionist achievement
     if summary.goals_completed >= 4 {
@@ -317,7 +375,7 @@ pub fn check_daily_achievements(
 
 /// Check time-based achievements
 pub fn check_time_achievements(
-    achievements: &mut Vec<Achievement>,
+    achievements: &mut [Achievement],
     completion_hour: u32,
 ) -> Vec<String> {
     let mut newly_unlocked = Vec::new();
@@ -337,7 +395,7 @@ pub fn check_time_achievements(
 
 /// Helper function to check and unlock an achievement
 fn check_and_unlock(
-    achievements: &mut Vec<Achievement>,
+    achievements: &mut [Achievement],
     id: &str,
     current_progress: u32,
     newly_unlocked: &mut Vec<String>,
@@ -358,7 +416,10 @@ pub fn get_achievement_stats(achievements: &[Achievement]) -> HashMap<String, u3
     let mut stats = HashMap::new();
 
     let total = achievements.len() as u32;
-    let unlocked = achievements.iter().filter(|a| a.unlocked_at.is_some()).count() as u32;
+    let unlocked = achievements
+        .iter()
+        .filter(|a| a.unlocked_at.is_some())
+        .count() as u32;
 
     stats.insert("total".to_string(), total);
     stats.insert("unlocked".to_string(), unlocked);
@@ -387,6 +448,58 @@ mod tests {
         let achievements = initialize_achievements();
         assert_eq!(achievements.len(), 20);
         assert!(achievements.iter().all(|a| a.unlocked_at.is_none()));
+    }
+
+    #[test]
+    fn every_defined_achievement_has_a_reachable_unlock_condition() {
+        let mut achievements = initialize_achievements();
+        let progress = UserProgress {
+            xp_total: u32::MAX,
+            level: u32::MAX,
+            streak_days: u32::MAX,
+            longest_streak: u32::MAX,
+            last_active_date: Some("2026-10-12".to_string()),
+            total_sessions: u32::MAX,
+            total_focus_minutes: u32::MAX,
+            total_tasks_completed: u32::MAX,
+        };
+        let pet = PetState {
+            last_interaction: Some("2026-10-12T00:00:00Z".to_string()),
+            current_stage: 2,
+            energy: 100,
+            hunger: 0,
+            cleanliness: 100,
+            affection: 100,
+            owned_accessories: vec![
+                "party_hat".into(),
+                "bow_tie".into(),
+                "sunglasses".into(),
+                "scarf".into(),
+                "apple".into(),
+                "cookie".into(),
+            ],
+            ..PetState::default()
+        };
+        let mut reached = check_progress_achievements(&mut achievements, &progress);
+        reached.extend(check_pet_achievements(&mut achievements, &pet, u32::MAX));
+        reached.extend(check_daily_achievements(
+            &mut achievements,
+            &DailySummary {
+                sessions_completed: 10,
+                goals_completed: 4,
+                ..DailySummary::default()
+            },
+        ));
+        reached.extend(check_time_achievements(&mut achievements, 7));
+        reached.extend(check_time_achievements(&mut achievements, 22));
+        assert_eq!(reached.len(), 20);
+        assert_eq!(
+            reached
+                .into_iter()
+                .collect::<std::collections::HashSet<_>>()
+                .len(),
+            20
+        );
     }
 
     #[test]

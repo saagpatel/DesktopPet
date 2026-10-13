@@ -4,7 +4,19 @@
   "description": "Warm knits and low-contrast evening scenes.",
   "activeMonths": [11, 12, 1],
   "bundles": [
-    { "name": "Fireside Focus", "uiTheme": "mono", "petSkin": "plush", "petScene": "cozy_room", "speciesId": "corgi" },
-    { "name": "Aurora Watch", "uiTheme": "dusk", "petSkin": "neon", "petScene": "space", "speciesId": "penguin" }
+    {
+      "name": "Fireside Focus",
+      "uiTheme": "mono",
+      "petSkin": "plush",
+      "petScene": "cozy_room",
+      "speciesId": "corgi"
+    },
+    {
+      "name": "Aurora Watch",
+      "uiTheme": "dusk",
+      "petSkin": "neon",
+      "petScene": "space",
+      "speciesId": "penguin"
+    }
   ]
 }

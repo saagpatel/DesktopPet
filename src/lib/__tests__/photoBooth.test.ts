@@ -35,7 +35,11 @@ describe("photo booth", () => {
 
   it("creates and triggers download for pet card", async () => {
     const click = vi.fn();
-    const anchor = { click, set href(_v: string) {}, set download(_v: string) {} };
+    const anchor = {
+      click,
+      set href(_v: string) {},
+      set download(_v: string) {},
+    };
     const ctx = {
       createLinearGradient: () => ({ addColorStop: vi.fn() }),
       fillRect: vi.fn(),
@@ -54,7 +58,8 @@ describe("photo booth", () => {
       width: 0,
       height: 0,
       getContext: () => ctx,
-      toBlob: (cb: (blob: Blob) => void) => cb(new Blob(["ok"], { type: "image/png" })),
+      toBlob: (cb: (blob: Blob) => void) =>
+        cb(new Blob(["ok"], { type: "image/png" })),
     };
 
     // @ts-expect-error test override
