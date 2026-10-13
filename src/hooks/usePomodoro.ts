@@ -9,7 +9,7 @@ import {
   EVENT_TRAY_TIMER_START,
 } from "../lib/events";
 import { removeLocalStorage, writeLocalStorage } from "../lib/safeStorage";
-import { invokeMaybe, invokeOr, invokeQuiet, listenSafe } from "../lib/tauri";
+import { invokeMaybe, invokeQuiet, listenSafe } from "../lib/tauri";
 import type { TimerPreset } from "../lib/constants";
 import type {
   FocusGuardrailsStatus,
@@ -51,21 +51,6 @@ function normalizePhase(phase: string): TimerPhase {
     : "idle";
 }
 
-function getRotatingSample(
-  hosts: string[],
-  sampleSize: number,
-  startIndex: number,
-) {
-  if (hosts.length <= sampleSize) {
-    return hosts;
-  }
-  const output: string[] = [];
-  for (let i = 0; i < sampleSize; i += 1) {
-    output.push(hosts[(startIndex + i) % hosts.length]);
-  }
-  return output;
-}
-
 function playSoundCue(volume: number) {
   try {
     const audio = new AudioContext();
@@ -105,7 +90,7 @@ export function usePomodoro() {
   const previousPhaseRef = useRef<TimerPhase>("idle");
   const toastHistoryRef = useRef<number[]>([]);
   const trayBadgeCountRef = useRef(0);
-  const hostSampleOffsetRef = useRef(0);
+  const deadlineRef = useRef<number | null>(null);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -147,6 +132,7 @@ export function usePomodoro() {
       breakDuration: p.break,
     });
     if (!result) return;
+    deadlineRef.current = Date.now() + p.work * 1000;
     setState((s) => ({
       ...s,
       phase: "work",
@@ -157,12 +143,19 @@ export function usePomodoro() {
     setPaused(false);
   }, [state.phase, state.preset]);
 
-  const pause = useCallback(() => setPaused(true), []);
-  const resume = useCallback(() => setPaused(false), []);
+  const pause = useCallback(() => {
+    deadlineRef.current = null;
+    setPaused(true);
+  }, []);
+  const resume = useCallback(() => {
+    deadlineRef.current = Date.now() + state.secondsLeft * 1000;
+    setPaused(false);
+  }, [state.secondsLeft]);
 
   const reset = useCallback(() => {
     clearTimer();
     const p = TIMER_PRESETS[state.preset];
+    deadlineRef.current = null;
     invokeQuiet("set_pet_animation", { animation: "idle" });
     setState((s) => ({
       ...s,
@@ -176,16 +169,8 @@ export function usePomodoro() {
   }, [clearTimer, state.preset]);
 
   useEffect(() => {
-    invokeOr<TimerRuntimeState>("get_timer_runtime", undefined, {
-      phase: "idle",
-      secondsLeft: TIMER_PRESETS[DEFAULT_PRESET].work,
-      totalSeconds: TIMER_PRESETS[DEFAULT_PRESET].work,
-      paused: false,
-      sessionId: null,
-      sessionsCompleted: 0,
-      preset: DEFAULT_PRESET,
-      lastUpdatedAt: new Date().toISOString(),
-    }).then((runtime) => {
+    invokeMaybe<TimerRuntimeState>("get_timer_runtime").then((runtime) => {
+      if (!runtime) return;
       const preset = isTimerPreset(runtime.preset)
         ? runtime.preset
         : DEFAULT_PRESET;
@@ -198,9 +183,31 @@ export function usePomodoro() {
         preset,
       });
       setPaused(runtime.paused);
+      const lastUpdated = Date.parse(runtime.lastUpdatedAt);
+      const elapsedSeconds =
+        runtime.paused || !Number.isFinite(lastUpdated)
+          ? 0
+          : Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000));
+      deadlineRef.current =
+        Date.now() + Math.max(0, runtime.secondsLeft - elapsedSeconds) * 1000;
       setHydrated(true);
     });
   }, []);
+
+  const completedSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.phase !== "celebrating" || !state.sessionId) return;
+    if (completedSessionRef.current === state.sessionId) return;
+    completedSessionRef.current = state.sessionId;
+    void (async () => {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const completed = await invokeMaybe("complete_pomodoro", {
+          sessionId: state.sessionId,
+        });
+        if (completed) return;
+      }
+    })();
+  }, [state.phase, state.sessionId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -225,13 +232,14 @@ export function usePomodoro() {
       return;
 
     intervalRef.current = setInterval(() => {
+      const remaining =
+        deadlineRef.current === null
+          ? Math.max(0, state.secondsLeft - 1)
+          : Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
       setState((prev) => {
-        if (prev.secondsLeft <= 1) {
+        if (remaining <= 0) {
           if (prev.phase === "work") {
-            // Work complete → celebrate (Rust awards coins + updates pet + tracks goals)
-            if (prev.sessionId) {
-              invokeQuiet("complete_pomodoro", { sessionId: prev.sessionId });
-            }
+            // Completion is awaited and retried by the phase effect below.
             return {
               ...prev,
               phase: "celebrating" as TimerPhase,
@@ -242,6 +250,7 @@ export function usePomodoro() {
             // Break complete → idle
             invokeQuiet("set_pet_animation", { animation: "idle" });
             const p = TIMER_PRESETS[prev.preset];
+            deadlineRef.current = null;
             return {
               ...prev,
               phase: "idle" as TimerPhase,
@@ -251,7 +260,7 @@ export function usePomodoro() {
             };
           }
         }
-        return { ...prev, secondsLeft: prev.secondsLeft - 1 };
+        return { ...prev, secondsLeft: remaining };
       });
     }, 1000);
 
@@ -263,12 +272,9 @@ export function usePomodoro() {
     if (state.phase !== "celebrating") return;
     const timeout = setTimeout(() => {
       const p = TIMER_PRESETS[state.preset];
+      deadlineRef.current = Date.now() + p.break * 1000;
       invokeQuiet("set_pet_animation", { animation: "break" });
       // Track break goal (absolute count — each completed work session starts a break)
-      invokeQuiet("update_goal_progress", {
-        goalId: "breaks",
-        progress: state.sessionsCompleted,
-      });
       setState((s) => ({
         ...s,
         phase: "break",
@@ -282,6 +288,10 @@ export function usePomodoro() {
   useEffect(() => {
     if (!hydrated) return;
     if (previousPhaseRef.current === state.phase) return;
+
+    if (previousPhaseRef.current === "break" && state.phase === "idle") {
+      void invokeMaybe("record_break_completion");
+    }
 
     previousPhaseRef.current = state.phase;
     invokeMaybe<Settings>("get_settings").then((settings) => {
@@ -347,87 +357,8 @@ export function usePomodoro() {
         trayBadgeCountRef.current = 0;
         void setTrayBadge(0);
       }
-
-      if (state.phase === "idle") {
-        setGuardrailMessage(null);
-        return;
-      }
-
-      const sampledHosts = getRotatingSample(
-        settings.focusBlocklist,
-        5,
-        hostSampleOffsetRef.current,
-      );
-      hostSampleOffsetRef.current =
-        settings.focusBlocklist.length === 0
-          ? 0
-          : (hostSampleOffsetRef.current + 5) % settings.focusBlocklist.length;
-      invokeMaybe<FocusGuardrailsStatus>(
-        "apply_focus_guardrails_intervention",
-        {
-          phase: state.phase,
-          hosts: sampledHosts,
-        },
-      ).then((status) => {
-        if (!status || !settings.focusGuardrailsEnabled) {
-          setGuardrailMessage(null);
-          return;
-        }
-        if (status.active) {
-          setGuardrailMessage(
-            `${status.message} [${status.nudgeLevel}] action: ${status.recommendedAction}`,
-          );
-          if (
-            status.recommendedAction === "pause_timer" &&
-            state.phase === "work" &&
-            !paused
-          ) {
-            setPaused(true);
-          }
-        } else {
-          setGuardrailMessage(null);
-        }
-      });
     });
-  }, [hydrated, paused, setTrayBadge, state.phase]);
-
-  useEffect(() => {
-    const onBlur = () => {
-      if (state.phase !== "work") return;
-      invokeMaybe<Settings>("get_settings").then((settings) => {
-        if (!settings?.focusGuardrailsEnabled) return;
-        const sampledHosts = getRotatingSample(
-          settings.focusBlocklist,
-          5,
-          hostSampleOffsetRef.current,
-        );
-        hostSampleOffsetRef.current =
-          settings.focusBlocklist.length === 0
-            ? 0
-            : (hostSampleOffsetRef.current + 5) %
-              settings.focusBlocklist.length;
-        invokeMaybe<FocusGuardrailsStatus>(
-          "apply_focus_guardrails_intervention",
-          {
-            phase: "work",
-            hosts: sampledHosts,
-          },
-        ).then((status) => {
-          if (!status?.active) return;
-          setGuardrailMessage(
-            `Intervention: ${status.message} (${status.matchedBlocklist.join(", ") || "no host details"}; sampled ${sampledHosts.length} hosts)`,
-          );
-          if (status.recommendedAction === "pause_timer" && !paused) {
-            setPaused(true);
-          }
-        });
-      });
-    };
-    window.addEventListener("blur", onBlur);
-    return () => {
-      window.removeEventListener("blur", onBlur);
-    };
-  }, [paused, state.phase]);
+  }, [hydrated, setTrayBadge, state.phase]);
 
   useEffect(() => {
     let cancelled = false;

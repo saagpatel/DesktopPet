@@ -1,5 +1,5 @@
-use serde_json::json;
 use chrono::Timelike;
+use serde_json::json;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
 
@@ -27,7 +27,7 @@ fn normalized_thresholds(raw: &[u32]) -> [u32; 3] {
         return [0, DEFAULT_STAGE_1_THRESHOLD, DEFAULT_STAGE_2_THRESHOLD];
     }
     let stage1 = raw[1].max(1);
-    let stage2 = raw[2].max(stage1 + 1);
+    let stage2 = raw[2].max(stage1.saturating_add(1));
     [0, stage1, stage2]
 }
 
@@ -99,7 +99,13 @@ pub async fn complete_pomodoro(
         .find(|s| s.id == session_id)
         .ok_or_else(|| "Session not found".to_string())?;
     if session.completed_at.is_some() {
-        return Err("Session already completed".to_string());
+        return store
+            .get("pet")
+            .ok_or_else(|| "Completed session exists but pet state is missing".to_string())
+            .and_then(|value| {
+                serde_json::from_value(value)
+                    .map_err(|error| format!("Stored pet data is malformed: {error}"))
+            });
     }
     session.completed_at = Some(chrono::Utc::now().to_rfc3339());
     let completed_work_duration = session.work_duration;
@@ -110,7 +116,7 @@ pub async fn complete_pomodoro(
         .get("coins")
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
-    coins.total += COINS_PER_POMODORO;
+    coins.total = coins.total.saturating_add(COINS_PER_POMODORO);
     store.set("coins", json!(coins));
     let _ = app.emit(EVENT_COINS_CHANGED, &coins);
 
@@ -119,10 +125,10 @@ pub async fn complete_pomodoro(
         .get("pet")
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
-    pet.total_pomodoros += 1;
+    pet.total_pomodoros = pet.total_pomodoros.saturating_add(1);
     pet.energy = pet.energy.saturating_sub(3);
-    pet.hunger = (pet.hunger + 4).min(100);
-    pet.affection = (pet.affection + 2).min(100);
+    pet.hunger = pet.hunger.saturating_add(4).min(100);
+    pet.affection = pet.affection.saturating_add(2).min(100);
     pet.animation_state = "celebrating".to_string();
 
     let new_stage = stage_for_total_pomodoros(pet.total_pomodoros, &pet.evolution_thresholds);
@@ -136,9 +142,11 @@ pub async fn complete_pomodoro(
         .get("user_progress")
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
-    let focus_bias = progress.total_focus_minutes + (completed_work_duration / 60);
-    let task_bias = progress.total_tasks_completed * 20;
-    pet.evolution_path = if focus_bias > task_bias + 120 {
+    let focus_bias = progress
+        .total_focus_minutes
+        .saturating_add(completed_work_duration / 60);
+    let task_bias = progress.total_tasks_completed.saturating_mul(20);
+    pet.evolution_path = if focus_bias > task_bias.saturating_add(120) {
         "scholar".to_string()
     } else if task_bias > focus_bias {
         "guardian".to_string()
@@ -155,23 +163,27 @@ pub async fn complete_pomodoro(
     let _ = app.emit(EVENT_PET_STATE_CHANGED, &pet);
 
     // Update daily goal for pomodoros
-    let _ = crate::commands::goals::increment_goal_progress(&app, "pomodoros");
-    let _ = crate::commands::goals::add_goal_progress(
-        &app,
-        "focus_minutes",
-        completed_work_duration / 60,
-    );
-    let _ =
-        crate::progression::record_focus_session(&app, completed_work_duration, COINS_PER_POMODORO);
-    let _ = crate::commands::pet::advance_focus_quest(&app, 1);
+    crate::commands::goals::increment_goal_progress(&app, "pomodoros")
+        .map_err(|error| format!("Session completed, but pomodoro goal update failed: {error}"))?;
+    crate::commands::goals::add_goal_progress(&app, "focus_minutes", completed_work_duration / 60)
+        .map_err(|error| {
+            format!("Session completed, but focus-minute goal update failed: {error}")
+        })?;
+    crate::progression::record_focus_session(&app, completed_work_duration, COINS_PER_POMODORO)
+        .map_err(|error| format!("Session completed, but progression reward failed: {error}"))?;
+    crate::commands::pet::advance_focus_quest(&app, 1)
+        .map_err(|error| format!("Session completed, but quest progress update failed: {error}"))?;
 
     // Release the store lock before invoking nested commands that lock the store.
     drop(_guard);
 
     // Check for achievement unlocks
     let completion_hour = chrono::Local::now().hour();
-    let _ = crate::commands::achievements::check_achievement_progress(app.clone(), store_lock.clone()).await;
-    let _ = crate::commands::achievements::check_time_achievement(app, store_lock, completion_hour).await;
+    let _ =
+        crate::commands::achievements::check_achievement_progress(app.clone(), store_lock.clone())
+            .await;
+    let _ = crate::commands::achievements::check_time_achievement(app, store_lock, completion_hour)
+        .await;
 
     Ok(pet)
 }
@@ -182,7 +194,14 @@ mod tests {
 
     #[test]
     fn evolution_thresholds_ordering() {
-        assert!(DEFAULT_STAGE_1_THRESHOLD < DEFAULT_STAGE_2_THRESHOLD);
+        assert_eq!(
+            normalized_thresholds(&[]),
+            [0, DEFAULT_STAGE_1_THRESHOLD, DEFAULT_STAGE_2_THRESHOLD]
+        );
+        assert_eq!(
+            stage_for_total_pomodoros(u32::MAX, &[0, u32::MAX, u32::MAX]),
+            2
+        );
     }
 
     #[test]

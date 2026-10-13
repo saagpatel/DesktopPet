@@ -62,6 +62,7 @@ pub fn run() {
             commands::tasks::delete_task,
             commands::goals::get_daily_goals,
             commands::goals::update_goal_progress,
+            commands::goals::record_break_completion,
             commands::shop::get_shop_items,
             commands::shop::purchase_item,
             commands::maintenance::export_app_snapshot,

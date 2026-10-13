@@ -47,12 +47,39 @@ describe("PetPanel smoke flow", () => {
         onCaptureCard={onCaptureCard}
         onRollEvent={vi.fn(async () => null)}
         onResolveEvent={vi.fn()}
-      />
+      />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Photo Booth: Save Pet Card" }));
+    await user.click(
+      screen.getByRole("button", { name: "Photo Booth: Save Pet Card" }),
+    );
     expect(onCaptureCard).toHaveBeenCalledTimes(1);
     await screen.findByText("Pet card saved.");
+  });
+
+  it("shows a photo-card error when capture rejects", async () => {
+    const user = userEvent.setup();
+    render(
+      <PetPanel
+        pet={pet}
+        events={[]}
+        activeQuest={null}
+        rollFeedback={null}
+        interactionVerbs={[]}
+        onInteract={vi.fn()}
+        onCaptureCard={vi.fn(async () => {
+          throw new Error("Permission denied");
+        })}
+        onRollEvent={vi.fn(async () => null)}
+        onResolveEvent={vi.fn()}
+      />,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Photo Booth: Save Pet Card" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Permission denied",
+    );
   });
 
   it("shows the latest quest-roll feedback message", () => {
@@ -82,11 +109,11 @@ describe("PetPanel smoke flow", () => {
         onCaptureCard={vi.fn(async () => "Pet card saved.")}
         onRollEvent={vi.fn(async () => null)}
         onResolveEvent={vi.fn()}
-      />
+      />,
     );
 
     expect(
-      screen.getByText("Quiet mode: next new quest available in about 12 min.")
+      screen.getByText("Quiet mode: next new quest available in about 12 min."),
     ).toBeInTheDocument();
   });
 
@@ -97,7 +124,7 @@ describe("PetPanel smoke flow", () => {
       () =>
         new Promise<PetEvent | null>((resolve) => {
           resolveRoll = resolve;
-        })
+        }),
     );
 
     render(
@@ -118,7 +145,7 @@ describe("PetPanel smoke flow", () => {
         onCaptureCard={vi.fn(async () => "Pet card saved.")}
         onRollEvent={onRollEvent}
         onResolveEvent={vi.fn()}
-      />
+      />,
     );
 
     await user.click(screen.getByRole("button", { name: "New Quest" }));
