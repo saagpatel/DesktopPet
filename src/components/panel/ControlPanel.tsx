@@ -245,7 +245,10 @@ export function ControlPanel() {
           />
         )}
         {tab === "shop" && (
-          <ShopPanel available={available} ownedAccessories={pet.accessories} />
+          <ShopPanel
+            available={available}
+            ownedAccessories={pet.ownedAccessories ?? pet.accessories}
+          />
         )}
         {tab === "stats" && (
           <StatsPanel progress={progress} summaries={summaries} />

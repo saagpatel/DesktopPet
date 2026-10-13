@@ -13,7 +13,7 @@ export async function invokeOr<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
   fallback: T,
-  tag = cmd
+  tag = cmd,
 ) {
   try {
     return await invoke<T>(cmd, args);
@@ -26,7 +26,7 @@ export async function invokeOr<T>(
 export async function invokeMaybe<T>(
   cmd: string,
   args?: Record<string, unknown>,
-  tag = cmd
+  tag = cmd,
 ) {
   try {
     return await invoke<T>(cmd, args);
@@ -36,7 +36,11 @@ export async function invokeMaybe<T>(
   }
 }
 
-export function invokeQuiet(cmd: string, args?: Record<string, unknown>, tag = cmd) {
+export function invokeQuiet(
+  cmd: string,
+  args?: Record<string, unknown>,
+  tag = cmd,
+) {
   try {
     invoke(cmd, args).catch((error) => warn(tag, error));
   } catch (error) {
@@ -47,7 +51,7 @@ export function invokeQuiet(cmd: string, args?: Record<string, unknown>, tag = c
 export async function listenSafe<T>(
   event: string,
   handler: EventCallback<T>,
-  tag = `listen:${event}`
+  tag = `listen:${event}`,
 ) {
   try {
     return await listen<T>(event, handler);
@@ -69,7 +73,12 @@ export function startDraggingSafe() {
 
 // Achievement commands
 export async function getAchievements(): Promise<Achievement[]> {
-  return invokeOr<Achievement[]>("get_achievements", undefined, [], "achievements:get");
+  return invokeOr<Achievement[]>(
+    "get_achievements",
+    undefined,
+    [],
+    "achievements:get",
+  );
 }
 
 export async function getAchievementStats(): Promise<AchievementStats> {
@@ -77,18 +86,14 @@ export async function getAchievementStats(): Promise<AchievementStats> {
     "get_achievement_stats",
     undefined,
     { total: 0, unlocked: 0, locked: 0 },
-    "achievements:stats"
+    "achievements:stats",
   );
 }
 
 export async function checkAchievementProgress(): Promise<string[] | null> {
-  return invokeMaybe<string[]>("check_achievement_progress", undefined, "achievements:check");
-}
-
-export async function checkTimeAchievement(completionHour: number): Promise<string[] | null> {
   return invokeMaybe<string[]>(
-    "check_time_achievement",
-    { completionHour },
-    "achievements:check-time"
+    "check_achievement_progress",
+    undefined,
+    "achievements:check",
   );
 }
