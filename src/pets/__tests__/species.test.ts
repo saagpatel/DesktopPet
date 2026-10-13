@@ -18,11 +18,15 @@ describe("species packs", () => {
       expect(pack.stageNames).toHaveLength(3);
       expect(pack.evolutionThresholds[0]).toBe(0);
       expect(pack.evolutionThresholds[1]).toBeGreaterThanOrEqual(1);
-      expect(pack.evolutionThresholds[2]).toBeGreaterThan(pack.evolutionThresholds[1]);
-      expect(pack.behaviorProfile.interactionCadenceMs[0]).toBeGreaterThanOrEqual(250);
-      expect(pack.behaviorProfile.interactionCadenceMs[1]).toBeGreaterThanOrEqual(
-        pack.behaviorProfile.interactionCadenceMs[0]
+      expect(pack.evolutionThresholds[2]).toBeGreaterThan(
+        pack.evolutionThresholds[1],
       );
+      expect(
+        pack.behaviorProfile.interactionCadenceMs[0],
+      ).toBeGreaterThanOrEqual(250);
+      expect(
+        pack.behaviorProfile.interactionCadenceMs[1],
+      ).toBeGreaterThanOrEqual(pack.behaviorProfile.interactionCadenceMs[0]);
     }
   });
 

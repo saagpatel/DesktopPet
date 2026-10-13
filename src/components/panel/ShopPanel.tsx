@@ -17,7 +17,10 @@ export function ShopPanel({ available, ownedAccessories }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium" style={{ color: "var(--muted-color)" }}>
+        <span
+          className="text-sm font-medium"
+          style={{ color: "var(--muted-color)" }}
+        >
           Your balance:
         </span>
         <CoinBadge amount={available} />
@@ -41,8 +44,16 @@ export function ShopPanel({ available, ownedAccessories }: Props) {
               }}
             >
               <div className="text-2xl mb-1">{item.icon}</div>
-              <div className="text-sm font-medium" style={{ color: "var(--text-color)" }}>{item.name}</div>
-              <div className="text-xs mb-2" style={{ color: "var(--muted-color)" }}>
+              <div
+                className="text-sm font-medium"
+                style={{ color: "var(--text-color)" }}
+              >
+                {item.name}
+              </div>
+              <div
+                className="text-xs mb-2"
+                style={{ color: "var(--muted-color)" }}
+              >
                 <CoinBadge amount={item.cost} />
               </div>
               <div
@@ -54,7 +65,10 @@ export function ShopPanel({ available, ownedAccessories }: Props) {
               {owned ? (
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "color-mix(in srgb, var(--accent-color) 40%, #15803d)" }}
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--accent-color) 40%, #15803d)",
+                  }}
                 >
                   Owned
                 </span>
@@ -65,9 +79,13 @@ export function ShopPanel({ available, ownedAccessories }: Props) {
                   className="px-3 py-1 text-xs rounded-full font-medium transition-opacity disabled:cursor-not-allowed"
                   style={
                     canAfford
-                      ? { backgroundColor: "var(--accent-color)", color: "white" }
+                      ? {
+                          backgroundColor: "var(--accent-color)",
+                          color: "white",
+                        }
                       : {
-                          backgroundColor: "color-mix(in srgb, var(--muted-color) 20%, white)",
+                          backgroundColor:
+                            "color-mix(in srgb, var(--muted-color) 20%, white)",
                           color: "var(--muted-color)",
                         }
                   }

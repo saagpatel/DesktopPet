@@ -24,23 +24,57 @@ export function PetStage2({ accessories }: Props) {
       <circle cx="147" cy="73" r="3" fill="white" />
 
       {/* Mouth — confident smile */}
-      <path d="M 112 95 Q 125 107 138 95" stroke="#2D3748" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path
+        d="M 112 95 Q 125 107 138 95"
+        stroke="#2D3748"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+      />
 
       {/* Blush */}
       <ellipse cx="90" cy="92" rx="9" ry="5" fill="#FFB3B3" opacity="0.4" />
       <ellipse cx="160" cy="92" rx="9" ry="5" fill="#FFB3B3" opacity="0.4" />
 
       {/* Arms */}
-      <ellipse cx="55" cy="145" rx="15" ry="10" fill="#4A9EC7" transform="rotate(-20 55 145)" />
-      <ellipse cx="195" cy="145" rx="15" ry="10" fill="#4A9EC7" transform="rotate(20 195 145)" />
+      <ellipse
+        cx="55"
+        cy="145"
+        rx="15"
+        ry="10"
+        fill="#4A9EC7"
+        transform="rotate(-20 55 145)"
+      />
+      <ellipse
+        cx="195"
+        cy="145"
+        rx="15"
+        ry="10"
+        fill="#4A9EC7"
+        transform="rotate(20 195 145)"
+      />
 
       {/* Legs */}
       <ellipse cx="100" cy="195" rx="18" ry="10" fill="#3A8DB5" />
       <ellipse cx="150" cy="195" rx="18" ry="10" fill="#3A8DB5" />
 
       {/* Small ears */}
-      <ellipse cx="90" cy="48" rx="10" ry="14" fill="#5BB5D5" transform="rotate(-15 90 48)" />
-      <ellipse cx="160" cy="48" rx="10" ry="14" fill="#5BB5D5" transform="rotate(15 160 48)" />
+      <ellipse
+        cx="90"
+        cy="48"
+        rx="10"
+        ry="14"
+        fill="#5BB5D5"
+        transform="rotate(-15 90 48)"
+      />
+      <ellipse
+        cx="160"
+        cy="48"
+        rx="10"
+        ry="14"
+        fill="#5BB5D5"
+        transform="rotate(15 160 48)"
+      />
 
       {/* Accessories */}
       {accessories.includes("party_hat") && (
@@ -57,19 +91,50 @@ export function PetStage2({ accessories }: Props) {
       )}
       {accessories.includes("sunglasses") && (
         <g>
-          <rect x="94" y="68" width="25" height="16" rx="5" fill="#1A1A2E" opacity="0.85" />
-          <rect x="131" y="68" width="25" height="16" rx="5" fill="#1A1A2E" opacity="0.85" />
-          <line x1="119" y1="76" x2="131" y2="76" stroke="#1A1A2E" strokeWidth="2.5" />
+          <rect
+            x="94"
+            y="68"
+            width="25"
+            height="16"
+            rx="5"
+            fill="#1A1A2E"
+            opacity="0.85"
+          />
+          <rect
+            x="131"
+            y="68"
+            width="25"
+            height="16"
+            rx="5"
+            fill="#1A1A2E"
+            opacity="0.85"
+          />
+          <line
+            x1="119"
+            y1="76"
+            x2="131"
+            y2="76"
+            stroke="#1A1A2E"
+            strokeWidth="2.5"
+          />
         </g>
       )}
       {accessories.includes("scarf") && (
-        <path d="M 70 115 Q 125 135 180 115 Q 175 128 125 132 Q 75 128 70 115" fill="#E74C3C" />
+        <path
+          d="M 70 115 Q 125 135 180 115 Q 175 128 125 132 Q 75 128 70 115"
+          fill="#E74C3C"
+        />
       )}
       {accessories.includes("apple") && (
         <g>
           <circle cx="42" cy="148" r="10" fill="#E74C3C" />
           <ellipse cx="42" cy="148" rx="10" ry="9" fill="#FF6B6B" />
-          <path d="M 42 138 Q 46 131 50 135" stroke="#4A7C3F" strokeWidth="1.5" fill="none" />
+          <path
+            d="M 42 138 Q 46 131 50 135"
+            stroke="#4A7C3F"
+            strokeWidth="1.5"
+            fill="none"
+          />
         </g>
       )}
       {accessories.includes("cookie") && (

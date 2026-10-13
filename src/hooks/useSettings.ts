@@ -35,7 +35,9 @@ export function useSettings() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
 
   useEffect(() => {
-    invokeOr<Settings>("get_settings", undefined, defaultSettings).then(setSettings);
+    invokeOr<Settings>("get_settings", undefined, defaultSettings).then(
+      setSettings,
+    );
 
     let cancelled = false;
     let unlisten = () => {};
@@ -62,7 +64,7 @@ export function useSettings() {
       setSettings(updated);
       return updated;
     },
-    [settings]
+    [settings],
   );
 
   return { settings, updateSettings };

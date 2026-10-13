@@ -18,7 +18,11 @@ export function useProgress() {
   const [progress, setProgress] = useState<UserProgress>(defaultProgress);
 
   useEffect(() => {
-    invokeOr<UserProgress>("get_user_progress", undefined, defaultProgress).then(setProgress);
+    invokeOr<UserProgress>(
+      "get_user_progress",
+      undefined,
+      defaultProgress,
+    ).then(setProgress);
 
     let cancelled = false;
     let unlisten = () => {};

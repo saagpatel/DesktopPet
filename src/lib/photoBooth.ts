@@ -128,7 +128,9 @@ const DEFAULT_THEME: PetCardTheme = {
   footerColor: "#64748b",
 };
 
-export function resolvePetCardTheme(input: Pick<PetCardInput, "pet" | "species" | "settings">) {
+export function resolvePetCardTheme(
+  input: Pick<PetCardInput, "pet" | "species" | "settings">,
+) {
   const key = `${input.species.id}:${input.settings.petScene}`;
   let theme =
     PHOTO_CARD_THEMES[key] ??
@@ -158,7 +160,7 @@ function roundedRect(
   y: number,
   width: number,
   height: number,
-  radius: number
+  radius: number,
 ) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
@@ -211,7 +213,9 @@ export async function downloadPetCard(input: PetCardInput) {
   ctx.fillText(`Theme: ${theme.name}`, 82, 176);
 
   const sprite = await loadImage(
-    input.species.stageSprites[Math.max(0, Math.min(2, input.pet.currentStage))]
+    input.species.stageSprites[
+      Math.max(0, Math.min(2, input.pet.currentStage))
+    ],
   );
   ctx.drawImage(sprite, 88, 198, 250, 250);
 
@@ -222,7 +226,11 @@ export async function downloadPetCard(input: PetCardInput) {
   ctx.fillText(`Streak: ${input.progress.streakDays} days`, 390, 300);
   ctx.fillText(`Total Sessions: ${input.pet.totalPomodoros}`, 390, 342);
   ctx.fillText(`Theme: ${input.settings.uiTheme}`, 390, 384);
-  ctx.fillText(`Loadout: ${input.settings.petSkin} / ${input.settings.petScene}`, 390, 426);
+  ctx.fillText(
+    `Loadout: ${input.settings.petSkin} / ${input.settings.petScene}`,
+    390,
+    426,
+  );
 
   ctx.font = "500 16px 'Avenir Next', 'Segoe UI', sans-serif";
   ctx.fillStyle = theme.footerColor;
@@ -230,7 +238,7 @@ export async function downloadPetCard(input: PetCardInput) {
   ctx.fillText(new Date().toLocaleString(), 690, 478);
 
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob((result) => resolve(result), "image/png")
+    canvas.toBlob((result) => resolve(result), "image/png"),
   );
 
   if (!blob) {

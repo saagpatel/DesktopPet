@@ -69,7 +69,7 @@ describe("CustomizationPanel smoke flow", () => {
         onSetPetSpecies={onSetPetSpecies}
         onSaveLoadout={vi.fn()}
         onApplyLoadout={vi.fn()}
-      />
+      />,
     );
 
     const speciesSelect = screen.getByLabelText("Species") as HTMLSelectElement;
@@ -100,10 +100,12 @@ describe("CustomizationPanel smoke flow", () => {
         onSetPetSpecies={onSetPetSpecies}
         onSaveLoadout={vi.fn()}
         onApplyLoadout={vi.fn()}
-      />
+      />,
     );
 
-    expect(screen.queryByRole("button", { name: /Petal Morning/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Petal Morning/i }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByLabelText("Spring Blossom"));
     expect(onUpdateSettings).toHaveBeenCalledWith({
       enabledSeasonalPacks: ["spring-blossom"],
@@ -125,14 +127,17 @@ describe("CustomizationPanel smoke flow", () => {
         onSetPetSpecies={onSetPetSpecies}
         onSaveLoadout={vi.fn()}
         onApplyLoadout={vi.fn()}
-      />
+      />,
     );
 
     await user.click(screen.getByRole("button", { name: /Petal Morning/i }));
     expect(onSetPetCustomization).toHaveBeenCalledWith("plush", "meadow");
 
     const catPack = getSpeciesPackById("cat");
-    expect(onSetPetSpecies).toHaveBeenCalledWith("cat", catPack.evolutionThresholds);
+    expect(onSetPetSpecies).toHaveBeenCalledWith(
+      "cat",
+      catPack.evolutionThresholds,
+    );
     expect(onUpdateSettings).toHaveBeenCalledWith({
       uiTheme: "sunrise",
       petSkin: "plush",
@@ -144,7 +149,7 @@ describe("CustomizationPanel smoke flow", () => {
     expect(onUpdateSettings).not.toHaveBeenCalledWith(
       expect.objectContaining({
         toastNotificationsEnabled: expect.anything(),
-      })
+      }),
     );
   });
 });

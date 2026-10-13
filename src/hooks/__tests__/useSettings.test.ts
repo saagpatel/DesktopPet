@@ -7,39 +7,52 @@ vi.mock("../../lib/tauri", () => ({
     if (command === "update_settings") {
       return {
         timerPreset: args.patch?.timerPreset || "standard",
-        notificationsEnabled: args.patch?.notificationsEnabled !== undefined
-          ? args.patch.notificationsEnabled
-          : true,
-        toastNotificationsEnabled: args.patch?.toastNotificationsEnabled !== undefined
-          ? args.patch.toastNotificationsEnabled
-          : false,
-        trayBadgeEnabled: args.patch?.trayBadgeEnabled !== undefined
-          ? args.patch.trayBadgeEnabled
-          : true,
-        notificationWhitelist: args.patch?.notificationWhitelist || ["session_complete"],
-        soundsEnabled: args.patch?.soundsEnabled !== undefined
-          ? args.patch.soundsEnabled
-          : false,
-        soundVolume: args.patch?.soundVolume !== undefined ? args.patch.soundVolume : 0.7,
-        quietModeEnabled: args.patch?.quietModeEnabled !== undefined
-          ? args.patch.quietModeEnabled
-          : true,
-        focusModeEnabled: args.patch?.focusModeEnabled !== undefined
-          ? args.patch.focusModeEnabled
-          : false,
+        notificationsEnabled:
+          args.patch?.notificationsEnabled !== undefined
+            ? args.patch.notificationsEnabled
+            : true,
+        toastNotificationsEnabled:
+          args.patch?.toastNotificationsEnabled !== undefined
+            ? args.patch.toastNotificationsEnabled
+            : false,
+        trayBadgeEnabled:
+          args.patch?.trayBadgeEnabled !== undefined
+            ? args.patch.trayBadgeEnabled
+            : true,
+        notificationWhitelist: args.patch?.notificationWhitelist || [
+          "session_complete",
+        ],
+        soundsEnabled:
+          args.patch?.soundsEnabled !== undefined
+            ? args.patch.soundsEnabled
+            : false,
+        soundVolume:
+          args.patch?.soundVolume !== undefined ? args.patch.soundVolume : 0.7,
+        quietModeEnabled:
+          args.patch?.quietModeEnabled !== undefined
+            ? args.patch.quietModeEnabled
+            : true,
+        focusModeEnabled:
+          args.patch?.focusModeEnabled !== undefined
+            ? args.patch.focusModeEnabled
+            : false,
         animationBudget: args.patch?.animationBudget || "medium",
-        contextAwareChillEnabled: args.patch?.contextAwareChillEnabled !== undefined
-          ? args.patch.contextAwareChillEnabled
-          : true,
-        chillOnFullscreen: args.patch?.chillOnFullscreen !== undefined
-          ? args.patch.chillOnFullscreen
-          : true,
-        chillOnMeetings: args.patch?.chillOnMeetings !== undefined
-          ? args.patch.chillOnMeetings
-          : true,
-        chillOnHeavyTyping: args.patch?.chillOnHeavyTyping !== undefined
-          ? args.patch.chillOnHeavyTyping
-          : true,
+        contextAwareChillEnabled:
+          args.patch?.contextAwareChillEnabled !== undefined
+            ? args.patch.contextAwareChillEnabled
+            : true,
+        chillOnFullscreen:
+          args.patch?.chillOnFullscreen !== undefined
+            ? args.patch.chillOnFullscreen
+            : true,
+        chillOnMeetings:
+          args.patch?.chillOnMeetings !== undefined
+            ? args.patch.chillOnMeetings
+            : true,
+        chillOnHeavyTyping:
+          args.patch?.chillOnHeavyTyping !== undefined
+            ? args.patch.chillOnHeavyTyping
+            : true,
         meetingHosts: args.patch?.meetingHosts || ["zoom.us"],
         heavyTypingThresholdCpm: args.patch?.heavyTypingThresholdCpm || 220,
         enabledSeasonalPacks: args.patch?.enabledSeasonalPacks || [],
@@ -47,12 +60,14 @@ vi.mock("../../lib/tauri", () => ({
         uiTheme: args.patch?.uiTheme || "sunrise",
         petSkin: args.patch?.petSkin || "classic",
         petScene: args.patch?.petScene || "meadow",
-        focusGuardrailsEnabled: args.patch?.focusGuardrailsEnabled !== undefined
-          ? args.patch.focusGuardrailsEnabled
-          : false,
-        focusGuardrailsWorkOnly: args.patch?.focusGuardrailsWorkOnly !== undefined
-          ? args.patch.focusGuardrailsWorkOnly
-          : true,
+        focusGuardrailsEnabled:
+          args.patch?.focusGuardrailsEnabled !== undefined
+            ? args.patch.focusGuardrailsEnabled
+            : false,
+        focusGuardrailsWorkOnly:
+          args.patch?.focusGuardrailsWorkOnly !== undefined
+            ? args.patch.focusGuardrailsWorkOnly
+            : true,
         focusAllowlist: args.patch?.focusAllowlist || [],
         focusBlocklist: args.patch?.focusBlocklist || [],
       };
@@ -91,7 +106,9 @@ vi.mock("../../lib/tauri", () => ({
     }
     return defaultValue;
   }),
-  listenSafe: vi.fn(function() { return Promise.resolve(() => {}) }),
+  listenSafe: vi.fn(function () {
+    return Promise.resolve(() => {});
+  }),
 }));
 
 describe("useSettings", () => {
@@ -139,7 +156,7 @@ describe("useSettings", () => {
 
     await act(async () => {
       await result.current.updateSettings({
-        notificationsEnabled: !initialState
+        notificationsEnabled: !initialState,
       });
     });
 

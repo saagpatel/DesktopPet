@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { PACK_VALIDATION_RULEBOOK, validateSpeciesPack } from "../packValidation";
+import {
+  PACK_VALIDATION_RULEBOOK,
+  validateSpeciesPack,
+} from "../packValidation";
 import { getSpeciesPackById } from "../species";
 
 describe("pack validation", () => {
@@ -8,7 +11,9 @@ describe("pack validation", () => {
     const result = validateSpeciesPack(penguin);
     expect(result.pass).toBe(true);
     expect(result.checks.every((check) => check.pass)).toBe(true);
-    expect(result.checks.every((check) => check.remediation.length > 0)).toBe(true);
+    expect(result.checks.every((check) => check.remediation.length > 0)).toBe(
+      true,
+    );
   });
 
   it("fails malformed thresholds", () => {

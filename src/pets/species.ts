@@ -66,7 +66,9 @@ const spriteAssets = {
 export const SUPPORTED_PACK_SCHEMA_VERSION = 1 as const;
 
 function resolveSprite(fileName: string): string {
-  const entry = Object.entries(spriteAssets).find(([path]) => path.endsWith(`/${fileName}`));
+  const entry = Object.entries(spriteAssets).find(([path]) =>
+    path.endsWith(`/${fileName}`),
+  );
   if (!entry) {
     throw new Error(`Missing species sprite asset: ${fileName}`);
   }
@@ -74,17 +76,20 @@ function resolveSprite(fileName: string): string {
 }
 
 function normalizeThresholds(
-  thresholds: [number, number, number]
+  thresholds: [number, number, number],
 ): [number, number, number] {
   const stage1 = Math.max(1, thresholds[1]);
   const stage2 = Math.max(stage1 + 1, thresholds[2]);
   return [0, stage1, stage2];
 }
 
-function normalizePack(input: RawSpeciesPack, sourcePath: string): PetSpeciesPack {
+function normalizePack(
+  input: RawSpeciesPack,
+  sourcePath: string,
+): PetSpeciesPack {
   if (input.schemaVersion !== SUPPORTED_PACK_SCHEMA_VERSION) {
     throw new Error(
-      `Unsupported species pack schemaVersion=${input.schemaVersion} in ${sourcePath}. Supported: ${SUPPORTED_PACK_SCHEMA_VERSION}.`
+      `Unsupported species pack schemaVersion=${input.schemaVersion} in ${sourcePath}. Supported: ${SUPPORTED_PACK_SCHEMA_VERSION}.`,
     );
   }
 
@@ -99,8 +104,14 @@ function normalizePack(input: RawSpeciesPack, sourcePath: string): PetSpeciesPac
     chillPosture: "settle",
   };
   const behaviorProfile = input.behaviorProfile ?? defaultProfile;
-  const cadenceFast = Math.max(250, Math.min(3000, behaviorProfile.interactionCadenceMs[0]));
-  const cadenceSlow = Math.max(cadenceFast, Math.min(5000, behaviorProfile.interactionCadenceMs[1]));
+  const cadenceFast = Math.max(
+    250,
+    Math.min(3000, behaviorProfile.interactionCadenceMs[0]),
+  );
+  const cadenceSlow = Math.max(
+    cadenceFast,
+    Math.min(5000, behaviorProfile.interactionCadenceMs[1]),
+  );
 
   return {
     schemaVersion: SUPPORTED_PACK_SCHEMA_VERSION,
@@ -123,7 +134,7 @@ function normalizePack(input: RawSpeciesPack, sourcePath: string): PetSpeciesPac
 
 const SPECIES_PACKS: PetSpeciesPack[] = Object.entries(rawPacks)
   .map(([sourcePath, entry]) =>
-    normalizePack((entry as { default: RawSpeciesPack }).default, sourcePath)
+    normalizePack((entry as { default: RawSpeciesPack }).default, sourcePath),
   )
   .sort((a, b) => a.name.localeCompare(b.name));
 

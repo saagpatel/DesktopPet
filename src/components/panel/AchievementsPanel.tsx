@@ -13,15 +13,12 @@ const CATEGORIES: { id: AchievementCategory | "all"; label: string }[] = [
 ];
 
 export function AchievementsPanel() {
-  const {
-    achievements,
-    stats,
-    loading,
-    getByCategory,
-    getCompletionPercent,
-  } = useAchievements();
+  const { achievements, stats, loading, getByCategory, getCompletionPercent } =
+    useAchievements();
 
-  const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<
+    AchievementCategory | "all"
+  >("all");
   const [filter, setFilter] = useState<"all" | "unlocked" | "locked">("all");
 
   // Get filtered achievements
@@ -57,7 +54,9 @@ export function AchievementsPanel() {
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b border-gray-200 p-4 dark:border-gray-700">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Achievements</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Achievements
+        </h2>
         <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <div>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -103,7 +102,9 @@ export function AchievementsPanel() {
 
         {/* Status Filter */}
         <div>
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Status</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            Status
+          </div>
           <div className="flex gap-2">
             {(["all", "unlocked", "locked"] as const).map((f) => (
               <button
@@ -139,7 +140,8 @@ export function AchievementsPanel() {
                   </div>
                   {achievement.unlockedAt && (
                     <div className="mt-1 text-[10px] text-gray-500 dark:text-gray-500">
-                      Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+                      Unlocked{" "}
+                      {new Date(achievement.unlockedAt).toLocaleDateString()}
                     </div>
                   )}
                 </div>

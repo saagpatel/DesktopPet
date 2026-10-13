@@ -21,9 +21,13 @@ describe("ShopPanel", () => {
   });
 
   it("displays user balance", () => {
-    const { container } = render(<ShopPanel available={42} ownedAccessories={[]} />);
+    const { container } = render(
+      <ShopPanel available={42} ownedAccessories={[]} />,
+    );
     // Balance is shown via CoinBadge — look for it in the balance section
-    const balanceSection = container.querySelector(".flex.items-center.justify-between");
+    const balanceSection = container.querySelector(
+      ".flex.items-center.justify-between",
+    );
     expect(balanceSection?.textContent).toContain("42");
   });
 
@@ -50,7 +54,9 @@ describe("ShopPanel", () => {
     // Apple costs 5
     render(<ShopPanel available={5} ownedAccessories={[]} />);
     const buyButtons = screen.getAllByRole("button", { name: "Buy" });
-    const enabledButtons = buyButtons.filter((btn) => !btn.hasAttribute("disabled"));
+    const enabledButtons = buyButtons.filter(
+      (btn) => !btn.hasAttribute("disabled"),
+    );
     expect(enabledButtons.length).toBeGreaterThan(0);
   });
 
@@ -61,7 +67,9 @@ describe("ShopPanel", () => {
     const buyButtons = screen.getAllByRole("button", { name: "Buy" });
     await user.click(buyButtons[0]);
 
-    expect(invoke).toHaveBeenCalledWith("purchase_item", { itemId: SHOP_ITEMS[0].id });
+    expect(invoke).toHaveBeenCalledWith("purchase_item", {
+      itemId: SHOP_ITEMS[0].id,
+    });
   });
 
   it("renders item icons", () => {
@@ -74,7 +82,9 @@ describe("ShopPanel", () => {
   it("shows accessory behavior hints", () => {
     render(<ShopPanel available={100} ownedAccessories={[]} />);
     for (const item of SHOP_ITEMS) {
-      expect(screen.getByText(getAccessoryBehaviorProfile(item.id).shopHint)).toBeInTheDocument();
+      expect(
+        screen.getByText(getAccessoryBehaviorProfile(item.id).shopHint),
+      ).toBeInTheDocument();
     }
   });
 });

@@ -32,7 +32,9 @@ describe("TIMER_PRESETS", () => {
   });
 
   it("all presets have labels", () => {
-    for (const key of Object.keys(TIMER_PRESETS) as (keyof typeof TIMER_PRESETS)[]) {
+    for (const key of Object.keys(
+      TIMER_PRESETS,
+    ) as (keyof typeof TIMER_PRESETS)[]) {
       expect(TIMER_PRESETS[key].label).toBeTruthy();
     }
   });
@@ -56,7 +58,9 @@ describe("COINS_PER_POMODORO", () => {
 
 describe("EVOLUTION_THRESHOLDS", () => {
   it("stage1 < stage2", () => {
-    expect(EVOLUTION_THRESHOLDS.stage1).toBeLessThan(EVOLUTION_THRESHOLDS.stage2);
+    expect(EVOLUTION_THRESHOLDS.stage1).toBeLessThan(
+      EVOLUTION_THRESHOLDS.stage2,
+    );
   });
 
   it("stage1 is 5", () => {

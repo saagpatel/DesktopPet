@@ -49,22 +49,29 @@ export function usePet() {
     };
   }, []);
 
-  const thresholds = pet.evolutionThresholds.length >= 3
-    ? pet.evolutionThresholds
-    : [0, EVOLUTION_THRESHOLDS.stage1, EVOLUTION_THRESHOLDS.stage2];
+  const thresholds =
+    pet.evolutionThresholds.length >= 3
+      ? pet.evolutionThresholds
+      : [0, EVOLUTION_THRESHOLDS.stage1, EVOLUTION_THRESHOLDS.stage2];
 
   const nextThreshold =
-    pet.currentStage === 0 ? thresholds[1] : pet.currentStage === 1 ? thresholds[2] : null;
+    pet.currentStage === 0
+      ? thresholds[1]
+      : pet.currentStage === 1
+        ? thresholds[2]
+        : null;
 
   const prevThreshold = pet.currentStage === 1 ? thresholds[1] : 0;
 
   const stageSpan = nextThreshold !== null ? nextThreshold - prevThreshold : 0;
-  const stageProgress = nextThreshold !== null ? pet.totalPomodoros - prevThreshold : 0;
+  const stageProgress =
+    nextThreshold !== null ? pet.totalPomodoros - prevThreshold : 0;
 
   const progressToNext = stageSpan > 0 ? stageProgress / stageSpan : 1;
 
   const species = getSpeciesPackById(pet.speciesId);
-  const stageName = species.stageNames[Math.max(0, Math.min(2, pet.currentStage))];
+  const stageName =
+    species.stageNames[Math.max(0, Math.min(2, pet.currentStage))];
 
   const interact = useCallback(async (action: string) => {
     const updated = await invokeMaybe<PetState>("pet_interact", { action });
@@ -73,22 +80,31 @@ export function usePet() {
     return updated;
   }, []);
 
-  const setCustomization = useCallback(async (skin?: string, scene?: string) => {
-    const updated = await invokeMaybe<PetState>("set_pet_customization", { skin, scene });
-    if (!updated) return null;
-    setPet(updated);
-    return updated;
-  }, []);
+  const setCustomization = useCallback(
+    async (skin?: string, scene?: string) => {
+      const updated = await invokeMaybe<PetState>("set_pet_customization", {
+        skin,
+        scene,
+      });
+      if (!updated) return null;
+      setPet(updated);
+      return updated;
+    },
+    [],
+  );
 
-  const setSpecies = useCallback(async (speciesId: string, evolutionThresholds: number[]) => {
-    const updated = await invokeMaybe<PetState>("set_pet_species", {
-      speciesId,
-      evolutionThresholds,
-    });
-    if (!updated) return null;
-    setPet(updated);
-    return updated;
-  }, []);
+  const setSpecies = useCallback(
+    async (speciesId: string, evolutionThresholds: number[]) => {
+      const updated = await invokeMaybe<PetState>("set_pet_species", {
+        speciesId,
+        evolutionThresholds,
+      });
+      if (!updated) return null;
+      setPet(updated);
+      return updated;
+    },
+    [],
+  );
 
   return {
     pet,

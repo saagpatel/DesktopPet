@@ -16,7 +16,10 @@ interface PackValidationRuleSpec {
   remediation: string;
 }
 
-export const PACK_VALIDATION_RULEBOOK: Record<PackValidationRuleId, PackValidationRuleSpec> = {
+export const PACK_VALIDATION_RULEBOOK: Record<
+  PackValidationRuleId,
+  PackValidationRuleSpec
+> = {
   "schema-version": {
     label: "Supported schema version",
     remediation: `Set schemaVersion to ${SUPPORTED_PACK_SCHEMA_VERSION} (current supported schema).`,
@@ -28,7 +31,8 @@ export const PACK_VALIDATION_RULEBOOK: Record<PackValidationRuleId, PackValidati
   },
   "stage-names": {
     label: "Exactly 3 stage names",
-    remediation: "Define exactly three names to map to baby, teen, and adult stages.",
+    remediation:
+      "Define exactly three names to map to baby, teen, and adult stages.",
   },
   thresholds: {
     label: "Valid ascending evolution thresholds",
@@ -37,7 +41,8 @@ export const PACK_VALIDATION_RULEBOOK: Record<PackValidationRuleId, PackValidati
   },
   sprites: {
     label: "3 stage sprites resolved with supported format",
-    remediation: "Provide one non-empty svg/png/webp sprite path for each stage.",
+    remediation:
+      "Provide one non-empty svg/png/webp sprite path for each stage.",
   },
   "blink-window": {
     label: "Idle blink range is sane",
@@ -86,7 +91,7 @@ function anchorInBounds(anchor: { x: number; y: number }) {
 function makeCheck(
   id: PackValidationRuleId,
   pass: boolean,
-  detail: string
+  detail: string,
 ): PackValidationCheck {
   const rule = PACK_VALIDATION_RULEBOOK[id];
   return {
@@ -98,20 +103,28 @@ function makeCheck(
   };
 }
 
-export function validateSpeciesPack(pack: PetSpeciesPack): PackValidationResult {
+export function validateSpeciesPack(
+  pack: PetSpeciesPack,
+): PackValidationResult {
   const checks: PackValidationCheck[] = [];
 
   checks.push(
     makeCheck(
       "schema-version",
       pack.schemaVersion === SUPPORTED_PACK_SCHEMA_VERSION,
-      `v${pack.schemaVersion}`
-    )
+      `v${pack.schemaVersion}`,
+    ),
   );
 
   checks.push(makeCheck("id-slug", isSlug(pack.id), pack.id));
 
-  checks.push(makeCheck("stage-names", pack.stageNames.length === 3, `${pack.stageNames.length} names`));
+  checks.push(
+    makeCheck(
+      "stage-names",
+      pack.stageNames.length === 3,
+      `${pack.stageNames.length} names`,
+    ),
+  );
 
   const thresholds = pack.evolutionThresholds;
   const thresholdsValid =
@@ -122,23 +135,24 @@ export function validateSpeciesPack(pack: PetSpeciesPack): PackValidationResult 
   checks.push(makeCheck("thresholds", thresholdsValid, thresholds.join(" / ")));
 
   const spriteChecks = pack.stageSprites.every(
-    (sprite) => typeof sprite === "string" && sprite.trim().length > 0
+    (sprite) => typeof sprite === "string" && sprite.trim().length > 0,
   );
   checks.push(
     makeCheck(
       "sprites",
       spriteChecks && pack.stageSprites.length === 3,
-      `${pack.stageSprites.length} sprite assets`
-    )
+      `${pack.stageSprites.length} sprite assets`,
+    ),
   );
 
   checks.push(
     makeCheck(
       "blink-window",
       pack.idleBehavior.blinkIntervalMs[0] >= 1200 &&
-        pack.idleBehavior.blinkIntervalMs[1] > pack.idleBehavior.blinkIntervalMs[0],
-      `${pack.idleBehavior.blinkIntervalMs[0]}-${pack.idleBehavior.blinkIntervalMs[1]}ms`
-    )
+        pack.idleBehavior.blinkIntervalMs[1] >
+          pack.idleBehavior.blinkIntervalMs[0],
+      `${pack.idleBehavior.blinkIntervalMs[0]}-${pack.idleBehavior.blinkIntervalMs[1]}ms`,
+    ),
   );
 
   const anchors = pack.accessoryAnchors;
@@ -149,8 +163,8 @@ export function validateSpeciesPack(pack: PetSpeciesPack): PackValidationResult 
         anchorInBounds(anchors.neck) &&
         anchorInBounds(anchors.left) &&
         anchorInBounds(anchors.right),
-      "head/neck/left/right"
-    )
+      "head/neck/left/right",
+    ),
   );
 
   const verbs = new Set(pack.interactionVerbs.map((verb) => verb.id));
@@ -163,8 +177,8 @@ export function validateSpeciesPack(pack: PetSpeciesPack): PackValidationResult 
         verbs.has("nap") &&
         verbs.has("clean") &&
         verbs.has("train"),
-      `${verbs.size} verbs`
-    )
+      `${verbs.size} verbs`,
+    ),
   );
 
   const cadence = pack.behaviorProfile.interactionCadenceMs;
@@ -176,8 +190,8 @@ export function validateSpeciesPack(pack: PetSpeciesPack): PackValidationResult 
         cadence[1] >= cadence[0] &&
         cadence[1] <= 5000 &&
         (posture === "settle" || posture === "hover" || posture === "curl"),
-      `${cadence[0]}-${cadence[1]}ms / ${posture}`
-    )
+      `${cadence[0]}-${cadence[1]}ms / ${posture}`,
+    ),
   );
 
   return {

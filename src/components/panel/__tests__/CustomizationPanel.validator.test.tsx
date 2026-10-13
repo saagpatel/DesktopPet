@@ -5,7 +5,8 @@ import { CustomizationPanel } from "../CustomizationPanel";
 import type { PetState, Settings } from "../../../store/types";
 
 vi.mock("../../../pets/packValidation", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../../pets/packValidation")>();
+  const actual =
+    await importOriginal<typeof import("../../../pets/packValidation")>();
   return {
     ...actual,
     validateSpeciesPacks: vi.fn(() => [
@@ -18,7 +19,8 @@ vi.mock("../../../pets/packValidation", async (importOriginal) => {
             label: "Valid ascending evolution thresholds",
             pass: false,
             detail: "0 / 8 / 4",
-            remediation: "Set thresholds to [0, mid, final] where mid >= 1 and final > mid.",
+            remediation:
+              "Set thresholds to [0, mid, final] where mid >= 1 and final > mid.",
           },
         ],
       },
@@ -92,18 +94,18 @@ describe("CustomizationPanel validator reports", () => {
         onSetPetSpecies={vi.fn()}
         onSaveLoadout={vi.fn()}
         onApplyLoadout={vi.fn()}
-      />
+      />,
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Copy Penguin validation report" })
+      screen.getByRole("button", { name: "Copy Penguin validation report" }),
     );
 
     await screen.findByText((text) =>
-      text.includes("Clipboard unavailable. Species validation report:")
+      text.includes("Clipboard unavailable. Species validation report:"),
     );
     await screen.findByText((text) =>
-      text.includes("Species: Penguin (penguin)")
+      text.includes("Species: Penguin (penguin)"),
     );
   });
 });

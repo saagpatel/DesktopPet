@@ -45,7 +45,10 @@ export function TaskList({ tasks, onAdd, onToggle, onDelete }: Props) {
       </form>
 
       {tasks.length === 0 ? (
-        <p className="text-sm text-center py-4" style={{ color: "var(--muted-color)" }}>
+        <p
+          className="text-sm text-center py-4"
+          style={{ color: "var(--muted-color)" }}
+        >
           No tasks yet
         </p>
       ) : (
@@ -54,7 +57,10 @@ export function TaskList({ tasks, onAdd, onToggle, onDelete }: Props) {
             <li
               key={task.id}
               className="flex items-center gap-2 p-2 rounded-lg border"
-              style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}
+              style={{
+                backgroundColor: "var(--card-bg)",
+                borderColor: "var(--border-color)",
+              }}
             >
               <button
                 onClick={() => onToggle(task.id)}
@@ -63,17 +69,30 @@ export function TaskList({ tasks, onAdd, onToggle, onDelete }: Props) {
                     ? "bg-green-500 border-green-500 text-white"
                     : "hover:opacity-90"
                 }`}
-                style={!task.completed ? { borderColor: "var(--border-color)" } : undefined}
+                style={
+                  !task.completed
+                    ? { borderColor: "var(--border-color)" }
+                    : undefined
+                }
               >
                 {task.completed && (
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M2 6L5 9L10 3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 )}
               </button>
               <span
                 className={`flex-1 text-sm ${task.completed ? "line-through" : ""}`}
-                style={{ color: task.completed ? "var(--muted-color)" : "var(--text-color)" }}
+                style={{
+                  color: task.completed
+                    ? "var(--muted-color)"
+                    : "var(--text-color)",
+                }}
               >
                 {task.title}
               </span>
@@ -83,7 +102,12 @@ export function TaskList({ tasks, onAdd, onToggle, onDelete }: Props) {
                 style={{ color: "var(--muted-color)" }}
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path
+                    d="M3 3L11 11M11 3L3 11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </li>

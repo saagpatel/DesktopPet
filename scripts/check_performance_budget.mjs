@@ -9,7 +9,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const distAssetsDir = path.join(repoRoot, "dist", "assets");
 const artifactsDir = path.join(repoRoot, "artifacts");
-const baselinePath = path.join(repoRoot, "docs", "performance-budget-baseline.json");
+const baselinePath = path.join(
+  repoRoot,
+  "docs",
+  "performance-budget-baseline.json",
+);
 
 const budgetConfig = [
   {
@@ -38,7 +42,9 @@ function readJson(filePath) {
 
 function findAssetFile(files, prefixes, suffix) {
   for (const prefix of prefixes) {
-    const matches = files.filter((file) => file.startsWith(prefix) && file.endsWith(suffix)).sort();
+    const matches = files
+      .filter((file) => file.startsWith(prefix) && file.endsWith(suffix))
+      .sort();
     if (matches.length > 0) {
       return matches[matches.length - 1];
     }
@@ -72,8 +78,8 @@ function buildMarkdown(results) {
   for (const row of results) {
     lines.push(
       `| ${row.id} | ${formatKiB(row.baselineGzipBytes)} | ${formatKiB(row.currentGzipBytes)} | ${formatKiB(
-        row.deltaGzipBytes
-      )} | ${formatKiB(row.thresholdGzipDeltaBytes)} | ${row.pass ? "PASS" : "FAIL"} |`
+        row.deltaGzipBytes,
+      )} | ${formatKiB(row.thresholdGzipDeltaBytes)} | ${row.pass ? "PASS" : "FAIL"} |`,
     );
   }
 
@@ -85,7 +91,9 @@ function main() {
     throw new Error("Missing docs/performance-budget-baseline.json");
   }
   if (!fs.existsSync(distAssetsDir)) {
-    throw new Error("Missing dist/assets. Run `npm run build` before this check.");
+    throw new Error(
+      "Missing dist/assets. Run `npm run build` before this check.",
+    );
   }
 
   const baseline = readJson(baselinePath);
@@ -94,7 +102,9 @@ function main() {
   const rows = budgetConfig.map((entry) => {
     const baselineTarget = baseline.targets?.[entry.id];
     if (!baselineTarget || typeof baselineTarget.gzipBytes !== "number") {
-      throw new Error(`Missing baseline target ${entry.id} in ${path.relative(repoRoot, baselinePath)}`);
+      throw new Error(
+        `Missing baseline target ${entry.id} in ${path.relative(repoRoot, baselinePath)}`,
+      );
     }
 
     const fileName = findAssetFile(distFiles, entry.prefixes, entry.suffix);

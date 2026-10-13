@@ -7,7 +7,9 @@ export function useAnalytics(days = 14) {
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
 
   const refresh = useCallback(() => {
-    invokeOr<DailySummary[]>("get_daily_summaries", { days }, []).then(setSummaries);
+    invokeOr<DailySummary[]>("get_daily_summaries", { days }, []).then(
+      setSummaries,
+    );
   }, [days]);
 
   useEffect(() => {

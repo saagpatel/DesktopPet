@@ -85,10 +85,15 @@ export function TimerDisplay({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-mono font-bold" style={{ color: "var(--text-color)" }}>
+          <span
+            className="text-3xl font-mono font-bold"
+            style={{ color: "var(--text-color)" }}
+          >
             {formatTime(secondsLeft)}
           </span>
-          <span className="text-sm" style={{ color: "var(--muted-color)" }}>{phaseLabel}</span>
+          <span className="text-sm" style={{ color: "var(--muted-color)" }}>
+            {phaseLabel}
+          </span>
         </div>
       </div>
 
@@ -107,7 +112,10 @@ export function TimerDisplay({
           <button
             onClick={onPause}
             className="px-6 py-2 text-white rounded-full font-medium transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "color-mix(in srgb, var(--muted-color) 80%, black)" }}
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--muted-color) 80%, black)",
+            }}
           >
             Pause
           </button>
@@ -116,7 +124,10 @@ export function TimerDisplay({
           <button
             onClick={onResume}
             className="px-6 py-2 text-white rounded-full font-medium transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent-color) 70%, green)" }}
+            style={{
+              backgroundColor:
+                "color-mix(in srgb, var(--accent-color) 70%, green)",
+            }}
           >
             Resume
           </button>
@@ -126,7 +137,8 @@ export function TimerDisplay({
             onClick={onReset}
             className="px-6 py-2 rounded-full font-medium transition-opacity hover:opacity-90"
             style={{
-              backgroundColor: "color-mix(in srgb, var(--muted-color) 15%, white)",
+              backgroundColor:
+                "color-mix(in srgb, var(--muted-color) 15%, white)",
               color: "var(--text-color)",
             }}
           >
@@ -137,14 +149,18 @@ export function TimerDisplay({
 
       {/* Session counter */}
       <div className="text-sm" style={{ color: "var(--muted-color)" }}>
-        Sessions today: <span className="font-semibold" style={{ color: "var(--text-color)" }}>{sessionsCompleted}</span>
+        Sessions today:{" "}
+        <span className="font-semibold" style={{ color: "var(--text-color)" }}>
+          {sessionsCompleted}
+        </span>
       </div>
       {guardrailMessage && (
         <div
           className="text-xs px-2 py-1 rounded-md text-center border"
           style={{
             color: "color-mix(in srgb, var(--accent-color) 55%, #92400e)",
-            backgroundColor: "color-mix(in srgb, var(--accent-soft) 40%, #fef3c7)",
+            backgroundColor:
+              "color-mix(in srgb, var(--accent-soft) 40%, #fef3c7)",
             borderColor: "color-mix(in srgb, var(--accent-color) 25%, #f59e0b)",
           }}
         >

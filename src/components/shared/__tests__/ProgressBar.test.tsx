@@ -36,7 +36,9 @@ describe("ProgressBar", () => {
   });
 
   it("applies custom color class", () => {
-    const { container } = render(<ProgressBar value={0.5} color="bg-green-500" />);
+    const { container } = render(
+      <ProgressBar value={0.5} color="bg-green-500" />,
+    );
     expect(getBar(container).className).toContain("bg-green-500");
   });
 

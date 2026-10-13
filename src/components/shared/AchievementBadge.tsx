@@ -12,9 +12,13 @@ export function AchievementBadge({
   showProgress = true,
 }: AchievementBadgeProps) {
   const isUnlocked = achievement.unlockedAt !== null;
-  const progressPercent = achievement.target > 0
-    ? Math.min(100, Math.round((achievement.progress / achievement.target) * 100))
-    : 0;
+  const progressPercent =
+    achievement.target > 0
+      ? Math.min(
+          100,
+          Math.round((achievement.progress / achievement.target) * 100),
+        )
+      : 0;
 
   const sizeClasses = {
     small: "w-16 h-20",
@@ -49,7 +53,9 @@ export function AchievementBadge({
       {/* Title */}
       <div
         className={`mt-1 text-center text-xs font-medium ${
-          isUnlocked ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"
+          isUnlocked
+            ? "text-gray-900 dark:text-gray-100"
+            : "text-gray-500 dark:text-gray-400"
         }`}
       >
         {achievement.title}

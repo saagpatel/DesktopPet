@@ -41,17 +41,19 @@ function validatePack(pack, fileName, spriteFiles) {
     checks,
     "schema-version",
     pack.schemaVersion === supportedSchemaVersion,
-    `v${pack.schemaVersion}`
+    `v${pack.schemaVersion}`,
   );
   addCheck(checks, "id-slug", isSlug(pack.id), String(pack.id ?? ""));
   addCheck(
     checks,
     "stage-names",
     Array.isArray(pack.stageNames) && pack.stageNames.length === 3,
-    `${Array.isArray(pack.stageNames) ? pack.stageNames.length : 0} names`
+    `${Array.isArray(pack.stageNames) ? pack.stageNames.length : 0} names`,
   );
 
-  const thresholds = Array.isArray(pack.evolutionThresholds) ? pack.evolutionThresholds : [];
+  const thresholds = Array.isArray(pack.evolutionThresholds)
+    ? pack.evolutionThresholds
+    : [];
   const thresholdsValid =
     thresholds.length === 3 &&
     thresholds[0] === 0 &&
@@ -61,11 +63,20 @@ function validatePack(pack, fileName, spriteFiles) {
     thresholds[2] > thresholds[1];
   addCheck(checks, "thresholds", thresholdsValid, thresholds.join(" / "));
 
-  const stageSprites = Array.isArray(pack.stageSpriteFiles) ? pack.stageSpriteFiles : [];
+  const stageSprites = Array.isArray(pack.stageSpriteFiles)
+    ? pack.stageSpriteFiles
+    : [];
   const spritesPresent =
     stageSprites.length === 3 &&
-    stageSprites.every((file) => typeof file === "string" && spriteFiles.has(file));
-  addCheck(checks, "sprites", spritesPresent, `${stageSprites.length} sprite assets`);
+    stageSprites.every(
+      (file) => typeof file === "string" && spriteFiles.has(file),
+    );
+  addCheck(
+    checks,
+    "sprites",
+    spritesPresent,
+    `${stageSprites.length} sprite assets`,
+  );
 
   const blink = pack.idleBehavior?.blinkIntervalMs;
   const blinkValid =
@@ -73,7 +84,12 @@ function validatePack(pack, fileName, spriteFiles) {
     blink.length === 2 &&
     blink[0] >= 1200 &&
     blink[1] > blink[0];
-  addCheck(checks, "blink-window", blinkValid, Array.isArray(blink) ? `${blink[0]}-${blink[1]}ms` : "");
+  addCheck(
+    checks,
+    "blink-window",
+    blinkValid,
+    Array.isArray(blink) ? `${blink[0]}-${blink[1]}ms` : "",
+  );
 
   const anchors = pack.accessoryAnchors ?? {};
   addCheck(
@@ -83,17 +99,19 @@ function validatePack(pack, fileName, spriteFiles) {
       inBounds(anchors.neck) &&
       inBounds(anchors.left) &&
       inBounds(anchors.right),
-    "head/neck/left/right"
+    "head/neck/left/right",
   );
 
   const verbs = new Set(
-    Array.isArray(pack.interactionVerbs) ? pack.interactionVerbs.map((verb) => verb.id) : []
+    Array.isArray(pack.interactionVerbs)
+      ? pack.interactionVerbs.map((verb) => verb.id)
+      : [],
   );
   addCheck(
     checks,
     "verbs",
     requiredVerbs.every((verb) => verbs.has(verb)),
-    `${verbs.size} verbs`
+    `${verbs.size} verbs`,
   );
 
   const cadence = pack.behaviorProfile?.interactionCadenceMs;
@@ -109,7 +127,7 @@ function validatePack(pack, fileName, spriteFiles) {
     checks,
     "behavior-profile",
     behaviorValid,
-    Array.isArray(cadence) ? `${cadence[0]}-${cadence[1]}ms / ${posture}` : ""
+    Array.isArray(cadence) ? `${cadence[0]}-${cadence[1]}ms / ${posture}` : "",
   );
 
   const failed = checks.filter((check) => !check.pass);
@@ -138,8 +156,8 @@ function buildMarkdownReport(report) {
   for (const pack of report.packs) {
     lines.push(
       `| ${pack.id} (${pack.fileName}) | ${pack.pass ? "PASS" : "FAIL"} | ${
-        pack.failedChecks.length > 0 ? pack.failedChecks.join(", ") : "-" 
-      } |`
+        pack.failedChecks.length > 0 ? pack.failedChecks.join(", ") : "-"
+      } |`,
     );
   }
 
@@ -158,7 +176,9 @@ function main() {
     return { fileName, pack: JSON.parse(raw) };
   });
 
-  const results = packs.map(({ fileName, pack }) => validatePack(pack, fileName, spriteFiles));
+  const results = packs.map(({ fileName, pack }) =>
+    validatePack(pack, fileName, spriteFiles),
+  );
   const failed = results.filter((pack) => !pack.pass);
 
   const report = {
@@ -179,11 +199,15 @@ function main() {
   fs.writeFileSync(mdPath, buildMarkdownReport(report));
 
   if (failed.length > 0) {
-    console.error("Pack QA failed. See artifacts/pack-qa-report.md for details.");
+    console.error(
+      "Pack QA failed. See artifacts/pack-qa-report.md for details.",
+    );
     process.exit(1);
   }
 
-  console.log(`Pack QA passed (${report.summary.passed}/${report.summary.total}).`);
+  console.log(
+    `Pack QA passed (${report.summary.passed}/${report.summary.total}).`,
+  );
   console.log(`Report: ${path.relative(repoRoot, mdPath)}`);
 }
 

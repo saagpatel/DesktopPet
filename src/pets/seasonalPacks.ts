@@ -21,7 +21,9 @@ const SEASONAL_PACKS: SeasonalPack[] = Object.values(seasonalModules)
   .map((pack) => ({
     ...pack,
     id: pack.id.trim().toLowerCase(),
-    activeMonths: pack.activeMonths.map((month) => Math.max(1, Math.min(12, month))),
+    activeMonths: pack.activeMonths.map((month) =>
+      Math.max(1, Math.min(12, month)),
+    ),
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 

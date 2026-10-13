@@ -127,7 +127,9 @@ describe("useAchievements", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    const achievement = result.current.achievements.find((a) => a.id === "focused_5");
+    const achievement = result.current.achievements.find(
+      (a) => a.id === "focused_5",
+    );
     if (!achievement) throw new Error("Achievement not found");
 
     const percent = result.current.getProgressPercent(achievement);
