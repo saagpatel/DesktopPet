@@ -7,12 +7,14 @@ function hostMatchesPattern(host: string, pattern: string) {
 }
 
 function includesMeetingHost(hosts: string[], patterns: string[]) {
-  return hosts.some((host) => patterns.some((pattern) => hostMatchesPattern(host, pattern)));
+  return hosts.some((host) =>
+    patterns.some((pattern) => hostMatchesPattern(host, pattern)),
+  );
 }
 
 export function useContextAwareChill(
   settings: Settings,
-  guardrailStatus: FocusGuardrailsStatus | null
+  guardrailStatus: FocusGuardrailsStatus | null,
 ) {
   const keyPressTimes = useRef<number[]>([]);
   const activeSignals = useRef({
@@ -23,14 +25,19 @@ export function useContextAwareChill(
   useEffect(() => {
     const publish = () => {
       const matchedHosts = guardrailStatus
-        ? [...guardrailStatus.matchedAllowlist, ...guardrailStatus.matchedBlocklist]
+        ? [
+            ...guardrailStatus.matchedAllowlist,
+            ...guardrailStatus.matchedBlocklist,
+          ]
         : [];
       const meeting = settings.chillOnMeetings
         ? includesMeetingHost(matchedHosts, settings.meetingHosts)
         : false;
       publishChillSignals({
-        fullscreen: settings.chillOnFullscreen && activeSignals.current.fullscreen,
-        heavyTyping: settings.chillOnHeavyTyping && activeSignals.current.heavyTyping,
+        fullscreen:
+          settings.chillOnFullscreen && activeSignals.current.fullscreen,
+        heavyTyping:
+          settings.chillOnHeavyTyping && activeSignals.current.heavyTyping,
         meeting,
         focusMode: settings.focusModeEnabled,
         timestamp: Date.now(),
@@ -40,7 +47,8 @@ export function useContextAwareChill(
     const updateFullscreen = () => {
       const isFullscreen =
         !!document.fullscreenElement ||
-        (window.innerHeight >= window.screen.height && window.innerWidth >= window.screen.width);
+        (window.innerHeight >= window.screen.height &&
+          window.innerWidth >= window.screen.width);
       activeSignals.current.fullscreen = isFullscreen;
       publish();
     };
@@ -49,17 +57,14 @@ export function useContextAwareChill(
       const now = Date.now();
       keyPressTimes.current.push(now);
       const windowMs = 15_000;
-      keyPressTimes.current = keyPressTimes.current.filter((ts) => now - ts <= windowMs);
-      const charsPerMinute = Math.round(keyPressTimes.current.length * (60_000 / windowMs));
-      activeSignals.current.heavyTyping = charsPerMinute >= settings.heavyTypingThresholdCpm;
-      publish();
-    };
-
-    const onBlur = () => {
-      if (!settings.chillOnFullscreen) {
-        return;
-      }
-      activeSignals.current.fullscreen = true;
+      keyPressTimes.current = keyPressTimes.current.filter(
+        (ts) => now - ts <= windowMs,
+      );
+      const charsPerMinute = Math.round(
+        keyPressTimes.current.length * (60_000 / windowMs),
+      );
+      activeSignals.current.heavyTyping =
+        charsPerMinute >= settings.heavyTypingThresholdCpm;
       publish();
     };
 
@@ -69,8 +74,13 @@ export function useContextAwareChill(
 
     const decayInterval = window.setInterval(() => {
       const now = Date.now();
-      keyPressTimes.current = keyPressTimes.current.filter((ts) => now - ts <= 15_000);
-      if (keyPressTimes.current.length === 0 && activeSignals.current.heavyTyping) {
+      keyPressTimes.current = keyPressTimes.current.filter(
+        (ts) => now - ts <= 15_000,
+      );
+      if (
+        keyPressTimes.current.length === 0 &&
+        activeSignals.current.heavyTyping
+      ) {
         activeSignals.current.heavyTyping = false;
         publish();
       }
@@ -78,7 +88,6 @@ export function useContextAwareChill(
 
     document.addEventListener("fullscreenchange", updateFullscreen);
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     updateFullscreen();
     publish();
@@ -87,7 +96,6 @@ export function useContextAwareChill(
       window.clearInterval(decayInterval);
       document.removeEventListener("fullscreenchange", updateFullscreen);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
   }, [

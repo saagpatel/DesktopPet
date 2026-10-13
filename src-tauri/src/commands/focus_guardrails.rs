@@ -188,7 +188,9 @@ pub fn apply_focus_guardrails_intervention(
     }
     if status.active {
         let _ = append_guardrail_event(&app, &status, &sampled_hosts);
-        let _ = crate::progression::record_guardrail_intervention(&app, &status.nudge_level);
+        crate::progression::record_guardrail_intervention(&app, &status.nudge_level).map_err(
+            |error| format!("Guardrail event recorded, but progression update failed: {error}"),
+        )?;
         let _ = app.emit(EVENT_FOCUS_GUARDRAILS_ALERT, &status);
     }
     Ok(status)
