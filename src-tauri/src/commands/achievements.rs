@@ -2,7 +2,9 @@ use crate::achievements::{
     check_daily_achievements, check_pet_achievements, check_progress_achievements,
     check_time_achievements, initialize_achievements,
 };
-use crate::models::{Achievement, AchievementState, CoinBalance, DailySummary, PetState, UserProgress};
+use crate::models::{
+    Achievement, AchievementState, CoinBalance, DailySummary, PetState, UserProgress,
+};
 use crate::StoreLock;
 use std::collections::HashMap;
 use tauri::{AppHandle, Emitter, State};
@@ -56,7 +58,9 @@ pub async fn get_achievement_stats(
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default();
 
-    Ok(crate::achievements::get_achievement_stats(&achievement_state.achievements))
+    Ok(crate::achievements::get_achievement_stats(
+        &achievement_state.achievements,
+    ))
 }
 
 /// Check and update achievement progress (called after significant events)
@@ -103,26 +107,19 @@ pub async fn check_achievement_progress(
     let mut all_newly_unlocked = Vec::new();
 
     // Check progress-based achievements
-    let newly_unlocked = check_progress_achievements(
-        &mut achievement_state.achievements,
-        &user_progress,
-    );
+    let newly_unlocked =
+        check_progress_achievements(&mut achievement_state.achievements, &user_progress);
     all_newly_unlocked.extend(newly_unlocked);
 
     // Check pet-based achievements
-    let newly_unlocked = check_pet_achievements(
-        &mut achievement_state.achievements,
-        &pet,
-        coins.total,
-    );
+    let newly_unlocked =
+        check_pet_achievements(&mut achievement_state.achievements, &pet, coins.total);
     all_newly_unlocked.extend(newly_unlocked);
 
     // Check daily achievements if there's a recent summary (newest first)
     if let Some(latest_summary) = daily_summaries.first() {
-        let newly_unlocked = check_daily_achievements(
-            &mut achievement_state.achievements,
-            latest_summary,
-        );
+        let newly_unlocked =
+            check_daily_achievements(&mut achievement_state.achievements, latest_summary);
         all_newly_unlocked.extend(newly_unlocked);
     }
 
@@ -185,10 +182,8 @@ pub async fn check_time_achievement(
         achievement_state.achievements = initialize_achievements();
     }
 
-    let newly_unlocked = check_time_achievements(
-        &mut achievement_state.achievements,
-        completion_hour,
-    );
+    let newly_unlocked =
+        check_time_achievements(&mut achievement_state.achievements, completion_hour);
 
     if !newly_unlocked.is_empty() {
         // Update total unlocked count

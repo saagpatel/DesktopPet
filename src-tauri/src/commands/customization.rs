@@ -22,7 +22,7 @@ const MAX_LOADOUTS: usize = 40;
 const MAX_LOADOUT_NAME_CHARS: usize = 64;
 
 fn validate_variant(value: &str, allowed: &[&str], field: &str) -> Result<(), String> {
-    if allowed.iter().any(|candidate| *candidate == value) {
+    if allowed.contains(&value) {
         Ok(())
     } else {
         Err(format!("Invalid {}: {}", field, value))
@@ -41,6 +41,14 @@ fn sanitize_accessories(accessories: Vec<String>) -> Vec<String> {
         }
     }
     sanitized
+}
+
+fn equipped_accessories_for_loadout(accessories: &[String], owned: &[String]) -> Vec<String> {
+    accessories
+        .iter()
+        .filter(|accessory| owned.contains(accessory))
+        .cloned()
+        .collect()
 }
 
 fn sanitize_loadout(mut loadout: CustomizationLoadout) -> Result<CustomizationLoadout, String> {
@@ -101,7 +109,7 @@ pub fn get_customization_loadouts(app: AppHandle) -> Result<Vec<CustomizationLoa
         .get("customization_loadouts")
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
-    loadouts.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    loadouts.sort_by_key(|a| a.name.to_lowercase());
     Ok(loadouts)
 }
 
@@ -158,7 +166,8 @@ pub fn apply_customization_loadout(
     let mut pet = load_pet(&app)?;
     pet.skin = loadout.pet_skin.clone();
     pet.scene = loadout.pet_scene.clone();
-    pet.accessories = loadout.accessories.clone();
+    pet.accessories =
+        equipped_accessories_for_loadout(&loadout.accessories, &pet.owned_accessories);
     store.set("pet", json!(pet));
 
     let _ = app.emit(EVENT_SETTINGS_CHANGED, settings);
@@ -168,7 +177,9 @@ pub fn apply_customization_loadout(
 
 #[cfg(test)]
 mod tests {
-    use super::{sanitize_accessories, sanitize_loadout, upsert_loadout};
+    use super::{
+        equipped_accessories_for_loadout, sanitize_accessories, sanitize_loadout, upsert_loadout,
+    };
     use crate::models::CustomizationLoadout;
 
     #[test]
@@ -179,6 +190,13 @@ mod tests {
             "unknown".to_string(),
         ]);
         assert_eq!(sanitized, vec!["party_hat".to_string()]);
+    }
+
+    #[test]
+    fn loadout_equipment_does_not_change_ownership() {
+        let owned = vec!["party_hat".to_string()];
+        let loadout = vec!["party_hat".to_string(), "scarf".to_string()];
+        assert_eq!(equipped_accessories_for_loadout(&loadout, &owned), owned);
     }
 
     #[test]

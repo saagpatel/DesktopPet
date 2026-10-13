@@ -34,6 +34,15 @@ fn save_tasks(app: &AppHandle, tasks: &[Task]) -> Result<(), String> {
     Ok(())
 }
 
+fn toggle_completion(task: &mut Task) -> bool {
+    task.completed = !task.completed;
+    if task.completed && !task.reward_claimed {
+        task.reward_claimed = true;
+        return true;
+    }
+    false
+}
+
 #[tauri::command]
 pub fn get_tasks(app: AppHandle) -> Result<Vec<Task>, String> {
     load_tasks(&app)
@@ -52,6 +61,7 @@ pub fn add_task(
         id: uuid::Uuid::new_v4().to_string(),
         title,
         completed: false,
+        reward_claimed: false,
         created_at: chrono::Utc::now().to_rfc3339(),
     };
     tasks.push(task.clone());
@@ -67,21 +77,19 @@ pub fn toggle_task(
 ) -> Result<Vec<Task>, String> {
     let _guard = store_lock.0.lock().map_err(|e| e.to_string())?;
     let mut tasks = load_tasks(&app)?;
-    let was_incomplete = tasks
-        .iter()
+    let should_reward = tasks
+        .iter_mut()
         .find(|t| t.id == task_id)
-        .map(|t| !t.completed)
+        .map(toggle_completion)
         .unwrap_or(false);
-
-    if let Some(task) = tasks.iter_mut().find(|t| t.id == task_id) {
-        task.completed = !task.completed;
-    }
     save_tasks(&app, &tasks)?;
 
     // If task was just completed, increment goal
-    if was_incomplete {
-        let _ = crate::commands::goals::increment_goal_progress(&app, "tasks");
-        let _ = crate::progression::record_task_completion(&app);
+    if should_reward {
+        crate::commands::goals::increment_goal_progress(&app, "tasks")
+            .map_err(|error| format!("Task completed, but task goal progress failed: {error}"))?;
+        crate::progression::record_task_completion(&app)
+            .map_err(|error| format!("Task completed, but progression reward failed: {error}"))?;
     }
 
     Ok(tasks)
@@ -103,6 +111,26 @@ pub fn delete_task(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn task() -> Task {
+        Task {
+            id: "one-time".to_string(),
+            title: "Finish task".to_string(),
+            completed: false,
+            reward_claimed: false,
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+        }
+    }
+
+    #[test]
+    fn task_reward_is_claimed_only_once_across_recompletion() {
+        let mut task = task();
+        assert!(toggle_completion(&mut task));
+        assert!(!toggle_completion(&mut task));
+        assert!(!toggle_completion(&mut task));
+        assert!(task.completed);
+        assert!(task.reward_claimed);
+    }
 
     #[test]
     fn normalize_task_title_trims() {
