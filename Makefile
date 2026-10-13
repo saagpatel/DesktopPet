@@ -25,6 +25,7 @@ check:
 	npm run lint
 	npm run typecheck
 	npm test
+	npm run test:pack-qa
 	cd src-tauri && cargo fmt --all -- --check
 	cd src-tauri && cargo clippy --locked --all-targets -- -D warnings
 	cd src-tauri && cargo test --locked
