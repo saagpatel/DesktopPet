@@ -5,7 +5,7 @@ description = "Desktop Pet Pomodoro Buddy"
 authors = ["you"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.90"
+rust-version = "1.98.1"
 
 [lib]
 name = "app_lib"
@@ -21,5 +21,4 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
-log = "0.4"
 tauri-plugin-clipboard-manager = "2.3.2"

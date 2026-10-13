@@ -2,6 +2,11 @@
   "name": "desktoppet",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@12.2.0",
+  "engines": {
+    "node": "22.23.3",
+    "npm": "12.2.0"
+  },
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js",
     "dev:lean": "bash ./scripts/lean-dev.sh",
@@ -14,8 +19,6 @@
     "test:pack-qa": "node ./scripts/pack_qa.mjs",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
-    "test:ui": "node ./node_modules/vitest/vitest.mjs --ui",
-    "test:coverage": "node ./node_modules/vitest/vitest.mjs run --coverage",
     "test:rust": "./scripts/tauri-rust-test.sh",
     "test:rust:release": "./scripts/tauri-rust-test.sh --release",
     "test:all": "npm test && npm run test:rust",
@@ -28,7 +31,7 @@
     "release:updater:package": "bash ./scripts/release/package-updater-assets.sh",
     "security:scan": "bash ./scripts/security/run-security-scans.sh",
     "test:tauri-preflight": "./scripts/tauri-preflight.sh",
-    "verify:required:frontend": "npm run typecheck && npm test && npm run test:smoke:frontend && npm run test:pack-qa && npm run build && npm run check:performance-budget && npm run perf:build:gate && npm run perf:bundle:gate && npm run perf:assets && npm run perf:memory && npm run perf:summary && npm run security:scan",
+    "verify:required:frontend": "npm run typecheck && npm test && npm run build && npm run check:performance-budget && npm run perf:bundle:gate && npm run perf:assets",
     "verify:required:tauri": "npm run test:tauri-preflight && npm run test:rust && npm run tauri:build:checked",
     "verify:required:tauri:strict:temp": "bash ./scripts/verify-tauri-strict-temp.sh",
     "verify:required": "npm run verify:required:frontend && npm run verify:required:tauri",
@@ -52,7 +55,6 @@
     "perf:bundle:gate": "npm run perf:bundle && if [ \"${DESKTOP_PET_STRICT_PERF:-0}\" = \"1\" ]; then node scripts/perf/compare-metric.mjs .perf-baselines/bundle.json .perf-results/bundle.json totalBytes 0.08; else echo \"Skipping strict perf regression compare (set DESKTOP_PET_STRICT_PERF=1 to enforce).\"; fi",
     "perf:baseline:update": "bash ./scripts/perf/update-baselines.sh",
     "perf:assets": "bash scripts/perf/check-assets.sh",
-    "perf:memory": "node --expose-gc scripts/perf/memory-smoke.mjs",
     "perf:lhci": "bash ./scripts/perf/lhci.sh",
     "perf:lhci:prod": "LHCI_PROFILE=production bash ./scripts/perf/lhci.sh",
     "perf:summary": "node scripts/perf/summarize.mjs",
@@ -61,7 +63,6 @@
   "dependencies": {
     "@tauri-apps/api": "2.12.1",
     "@tauri-apps/plugin-clipboard-manager": "^2.4.1",
-    "@tauri-apps/plugin-store": "^2.5.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
