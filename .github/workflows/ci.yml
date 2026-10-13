@@ -5,55 +5,37 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  frontend:
-    name: Frontend Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run canonical frontend verification
-        run: npm run verify:required:frontend
-
-      - name: Upload frontend QA artifacts
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: frontend-qa-artifacts
-          path: artifacts/*.*
-          if-no-files-found: ignore
-
-  tauri-backend:
-    name: Tauri Backend + Bundle
+  checks:
+    name: Checks and app bundle
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: 22
+          node-version-file: .node-version
           cache: npm
 
+      - name: Setup pinned npm
+        run: npm install --global npm@12.2.0
+
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # rust 1.98.1
+        with:
+          toolchain: 1.98.1
+          components: rustfmt, clippy
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run smoke tests
-        run: DESKTOP_PET_STRICT_RUST=1 npm run test:smoke
+      - name: Run checks
+        run: make check
 
-      - name: Run canonical Tauri verification
-        run: DESKTOP_PET_STRICT_RUST=1 npm run verify:required:tauri
+      - name: Build macOS app bundle
+        run: npm run tauri -- build --bundles app

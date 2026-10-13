@@ -12,10 +12,10 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-      - uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
         id: changed
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         if: contains(steps.changed.outputs.all_changed_files, 'pnpm-lock.yaml') || contains(steps.changed.outputs.all_changed_files, 'package-lock.json') || contains(steps.changed.outputs.all_changed_files, 'yarn.lock')
         with:
           script: |
