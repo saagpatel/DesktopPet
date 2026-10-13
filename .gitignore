@@ -5,3 +5,6 @@ src-tauri/target/
 .perf-results/
 .DS_Store
 *.dmg
+.npm-cache/
+.local-cargo-home/
+.local-rustup/

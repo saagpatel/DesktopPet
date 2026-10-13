@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+target/
+artifacts/
+.perf-results/
+.perf-baselines/
+.npm-cache/

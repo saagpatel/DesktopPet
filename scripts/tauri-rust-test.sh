@@ -23,4 +23,4 @@ if [[ "$(pwd)" == *:* ]]; then
   skip_or_fail "workspace path contains ':', which is unsupported for this cargo workflow."
 fi
 
-cargo test --manifest-path src-tauri/Cargo.toml "$@"
+(cd src-tauri && cargo test --locked "$@")
