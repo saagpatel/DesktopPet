@@ -1,57 +1,36 @@
-<!-- comm-contract:start -->
+# Purpose
 
-## Communication Contract
+DesktopPet is a local desktop companion built with Tauri and React. Keep persistence explicit and protect user data during migrations and imports.
 
-- Inherit global Codex communication and reporting rules from `/Users/d/.codex/AGENTS.override.md` and `/Users/d/.codex/policies/communication/BigPictureReportingV1.md`.
-- Repo-specific instructions below add project constraints only; do not restate global voice or status-reporting rules here.
-<!-- comm-contract:end -->
+# Layout
 
-## Inherited Operating Rules
+- `src/`: React interface, hooks, domain types, and frontend tests.
+- `src-tauri/`: Tauri commands, Rust models, persistence, and backend tests.
+- `scripts/`: build, performance budget, security, and release helpers.
+- `docs/`: product contracts and release history.
 
-- Inherit global git, review/fix, testing, docs, skill-use, and reporting gates from `/Users/d/.codex/AGENTS.md` and active session instructions.
-- Use `.codex/verify.commands` and `.codex/scripts/run_verify_commands.sh` as this repo-local verification authority when present.
-- Keep the project-specific portfolio constraints below as the source of truth for runtime, privacy, and release risks.
+# Setup
 
-<!-- portfolio-context:start -->
-# Portfolio Context
+- Node.js 22.23.3 and npm 12.2.0 (see `package.json`).
+- Rust 1.98.1 with `rustfmt` and `clippy` (see `src-tauri/rust-toolchain.toml`).
+- Run `npm ci` to install frontend dependencies.
+- Native desktop builds also need the Tauri prerequisites for the host operating system.
 
-## What This Project Is
+# Checks
 
-DesktopPet is a Tauri desktop companion that turns focus sessions into a pet progression loop. A transparent always-on-top pet overlay, controls panel, Pomodoro presets, XP/coins, quests, shop unlocks, and focus guardrails work together as a local desktop productivity game.
+- `make check` runs formatting, TypeScript, Vitest, Rust formatting, Clippy, Rust tests, and the frontend build.
+- `npm run security:scan` runs the separate network-dependent security checks.
+- Preserve failures and report the command and output; do not weaken checks to make them pass.
 
-## Current State
+# Boundaries
 
-The repo is active desktop product work. Existing local changes are PR-template metadata, so context recovery should stay documentation-only.
+- Do not add automatic focus interventions from configured rules without genuine observations and an explicit product decision.
+- Keep local persistence as the source of truth; do not introduce a remote API or database without approval.
+- Preserve unrelated work and user data. Do not publish, deploy, sign, notarize, or release as part of routine changes.
+- Do not access the user's Downloads folder.
 
-## Stack
+# Delivery
 
-| Layer | Technology |
-|-------|------------|
-| Shell | Tauri 2 (Rust backend) |
-| Language | TypeScript + React |
-| Bundler | Vite |
-| Testing | Vitest |
-| Styling | Tailwind CSS |
-
-## How To Run
-
-```bash
-# Frontend development
-npm run dev
-
-# Frontend production build
-npm run build
-```
-
-## Known Risks
-
-- Focus guardrails affect user workflow; avoid blocking behavior without clear controls and tests.
-- Pet, quest, shop, and focus-session state crosses TypeScript stores and the Rust layer, so keep persistence boundaries explicit.
-- Transparent always-on-top windows can be fragile on desktop platforms; verify overlay behavior after UI changes.
-- Keep PR-template drift separate from product changes.
-
-## Next Recommended Move
-
-Resolve the PR-template drift separately, then verify overlay, Pomodoro, quest/shop, and focus-guardrail flows before shipping behavior changes.
-
-<!-- portfolio-context:end -->
+- Keep changes small and reviewable, with focused tests for changed behavior.
+- Use conventional commit subjects: `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `chore`, or `revert`.
+- Verify the final diff and explain checks and any remaining limits.

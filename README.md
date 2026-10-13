@@ -12,15 +12,16 @@ DesktopPet is a Tauri-powered desktop companion that floats above your windows a
 - **Pomodoro integration** — 15/5, 25/5, and 50/10 presets with XP and coin rewards on completion
 - **Pet progression** — evolution stages, care stats, personality state, and 20+ unlockable achievements
 - **Shop + quests** — accessory catalog, rolling events, and active quests with completion rewards
-- **Focus guardrails** — allowlist/blocklist host matching with timer messages, pause interventions, and event history
+- **Focus guardrails** — explicit evaluation of supplied host observations against allowlists and blocklists
 - **Customization** — skins, scenes, themes, saved loadouts, and a photo booth for shareable pet cards
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 22.13+ on the 22.x line and npm (the CI runtime; required by the locked Vite/jsdom toolchain).
-- For native desktop work: Rust `stable`, Cargo, and the [Tauri prerequisites for your OS](https://v2.tauri.app/start/prerequisites/). `Cargo.toml` declares Rust 1.77.2, but the locked dependency graph may require a newer toolchain.
+- Node.js 22.23.3 and npm 12.2.0.
+- Rust 1.98.1 with Cargo, `rustfmt`, and `clippy` for native checks.
+- For native desktop work, install the [Tauri prerequisites for your OS](https://v2.tauri.app/start/prerequisites/).
 - Use the Tauri CLI pinned in `package.json` through `npm run tauri`; no global CLI installation is needed.
 
 ### Installation
@@ -46,17 +47,31 @@ npm run tauri -- dev
 npm run build
 ```
 
-See the [execution contract](docs/execution-contract.md) for focused tests, format/typecheck checks, native builds, strict verification and conditional browser/desktop checks.
+Run `make check` for the repository checks. Run `npm run security:scan` separately for network-dependent security scans.
 
-## Tech Stack
+## Status
 
-| Layer    | Technology             |
-| -------- | ---------------------- |
-| Shell    | Tauri 2 (Rust backend) |
-| Language | TypeScript + React     |
-| Bundler  | Vite                   |
-| Testing  | Vitest                 |
-| Styling  | Tailwind CSS           |
+### Stack
+
+| Layer   | Technology                  |
+| ------- | --------------------------- |
+| Shell   | Tauri 2 with a Rust backend |
+| UI      | React 19 and TypeScript 7   |
+| Bundler | Vite 8                      |
+| Tests   | Vitest                      |
+| Styling | Tailwind CSS                |
+
+### Known risks
+
+- Focus guardrails evaluate only hosts explicitly provided by the application. The desktop app does not detect activity in other apps or browsers.
+- Transparent, always-on-top windows can vary across desktop environments and need platform-specific manual verification.
+- Backup imports replace local application state after schema validation; keep a separate backup before importing important data.
+
+### Next steps
+
+- Run `make check` before proposing changes.
+- Verify overlay behavior and focus-session flows on the target desktop platform before a release.
+- CI builds the macOS `.app` bundle; DMG creation, signing, and notarization are release-only work.
 
 ## Architecture
 
