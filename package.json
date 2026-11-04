@@ -67,7 +67,7 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@commitlint/cz-commitlint": "^21.2.3",
     "@lhci/cli": "^0.15.1",
