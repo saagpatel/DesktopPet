@@ -6,10 +6,15 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: read
+
 jobs:
   build-macos:
     name: Build macOS Release Artifacts
     runs-on: macos-latest
+    permissions:
+      contents: write
     env:
       REQUIRE_MACOS_SIGNING: ${{ vars.REQUIRE_MACOS_SIGNING }}
       REQUIRE_MACOS_NOTARIZATION: ${{ vars.REQUIRE_MACOS_NOTARIZATION }}
