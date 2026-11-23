@@ -4,13 +4,13 @@
 
 > A desktop companion that actually earns its place on your screen
 
-DesktopPet is a Tauri-powered desktop companion that floats above your windows as an animated penguin. Focus sessions reward coins and XP, which feed directly into pet evolution, accessory unlocks, and quests — turning your Pomodoro timer into a progression loop.
+DesktopPet is a Tauri-powered desktop companion that floats above your windows as an animated pet. You start with a penguin. Completed Pomodoros help your pet evolve and count toward focus quests. Each session also earns coins for accessories and XP toward your next level.
 
 ## Features
 
 - **Floating pet overlay** — transparent, always-on-top companion window that reacts to pats and care actions
 - **Pomodoro integration** — 15/5, 25/5, and 50/10 presets with XP and coin rewards on completion
-- **Pet progression** — evolution stages, care stats, personality state, and 20+ unlockable achievements
+- **Pet progression** — evolution stages, care stats, personality state, and 20 unlockable achievements
 - **Shop + quests** — accessory catalog, rolling events, and active quests with completion rewards
 - **Focus guardrails** — explicit evaluation of supplied host observations against allowlists and blocklists
 - **Customization** — skins, scenes, themes, saved loadouts, and a photo booth for shareable pet cards
@@ -20,9 +20,10 @@ DesktopPet is a Tauri-powered desktop companion that floats above your windows a
 ### Prerequisites
 
 - Node.js 22.23.3 and npm 12.2.0.
+- Bash for the install script and Make for the repository checks.
 - Rust 1.98.1 with Cargo, `rustfmt`, and `clippy` for native checks.
 - For native desktop work, install the [Tauri prerequisites for your OS](https://v2.tauri.app/start/prerequisites/).
-- Use the Tauri CLI pinned in `package.json` through `npm run tauri`; no global CLI installation is needed.
+- The project includes the Tauri CLI. Check the version pinned in `package-lock.json` after installation with `npm run tauri -- --version`.
 
 ### Installation
 
@@ -37,7 +38,7 @@ For an isolated verification worktree, use `npm ci --ignore-scripts` to avoid th
 ### Usage
 
 ```bash
-# Frontend preview only
+# Preview the controls at http://localhost:5173/panel.html
 npm run dev
 
 # Native desktop development (launches the app and uses local app state)
@@ -47,7 +48,7 @@ npm run tauri -- dev
 npm run build
 ```
 
-Run `make check` for the repository checks. Run `npm run security:scan` separately for network-dependent security scans.
+Run `make check` for the repository checks. Run `npm run security:scan` separately for the npm audit. It also runs Cargo Audit and Gitleaks when installed. By default, scan failures print warnings.
 
 ## Status
 
